@@ -132,14 +132,17 @@ def evaluate_model(params, model, dataset):
     utility.print_evaluation_report(y_test_pred, y_test, "Test set")
 
 
-def plot_images(dataset, num_imgs, labels):
+def plot_random_images(dataset, num_imgs, labels):
     (X_train, y_train), (X_test, y_test) = dataset
     rand_indices = np.random.choice(X_train.shape[0], num_imgs)
 
     X = X_train[rand_indices]
     y = y_train[rand_indices]
 
-    utility.plot_images(X, y, labels)
+    y_ints = y.argmax(axis=1)  # Integer labels
+    y_labels = [labels[y_int] for y_int in y_ints]
+
+    utility.plot_images(X, y_labels)
 
 
 if __name__ == "__main__":
@@ -155,6 +158,8 @@ if __name__ == "__main__":
 
     set_extra_params(exp_params, dataset)
 
+    logging.info('Experiment parameters below:\n{}'.format(exp_params))
+
     dataset = preprocess(exp_params, dataset)
 
     # plot_images(dataset, 25, labels)
@@ -162,7 +167,7 @@ if __name__ == "__main__":
     model, history = create_and_train_model(exp_params, dataset)
 
     utility.save_training_history(history, exp_params['results_dir'])
-    utility.plot_training_history(history, exp_params['results_dir'])
+    # utility.plot_training_history(history, None)
 
     evaluate_model(exp_params, model, dataset)
 

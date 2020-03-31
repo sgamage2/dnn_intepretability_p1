@@ -600,11 +600,9 @@ def split_csv_file(filename, num_splits, output_dir):
         write_to_csv(split, split_filename)
 
 
-def plot_images(X, y, labels):
+def plot_images(X, labels):
     num_imgs = X.shape[0]
     num_rows = math.ceil(num_imgs ** 0.5)
-
-    y = y.argmax(axis=1)  # Integer labels
 
     plt.figure(figsize=(10, 10))
     for i in range(num_imgs):
@@ -618,6 +616,6 @@ def plot_images(X, y, labels):
             img = img.reshape(img.shape[0], img.shape[1])
 
         plt.imshow(img, cmap=plt.cm.binary)
-        plt.xlabel(labels[y[i]])
+        plt.xlabel(labels[i])
 
     plt.show()
