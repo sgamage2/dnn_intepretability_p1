@@ -23,7 +23,7 @@ def get_exp_params():
     params['tl_strategy'] = 'train_new_classifier'
     params['dataset_portion'] = 1   # To reduce dataset for quick testing
     params['num_classes'] = 200
-    params['batch_size'] = 32
+    params['batch_size'] = 128
     params['epochs'] = 10
     params['early_stop_patience'] = -1  # Disabled
     params['tensorboard_log_dir'] = 'output'
@@ -62,7 +62,7 @@ def get_dataset(params, preproc_func):
 
     if dataset_name == 'tiny_imagenet':
         logging.info("Creating tiny_imagenet data generators")
-        datagen = ImageDataGenerator(preprocessing_function=preproc_func)
+        datagen = ImageDataGenerator(preprocessing_function=preproc_func, validation_split=0.2)
         train_set_dir = '../../Datasets/tiny-imagenet-200-truncated/train/'
         class_labels_file = '../../Datasets/tiny-imagenet-200-truncated/wnids.txt'
 
@@ -70,33 +70,18 @@ def get_dataset(params, preproc_func):
             labels = f.readlines()
             labels = [label.rstrip() for label in labels]
 
-        train_it = datagen.flow_from_directory(train_set_dir, classes=labels, batch_size=batch_size, target_size=target_size)
+        train_it = datagen.flow_from_directory(train_set_dir, classes=labels, batch_size=batch_size, target_size=target_size, subset="training")
+        test_it = datagen.flow_from_directory(train_set_dir, classes=labels, batch_size=batch_size, target_size=target_size, subset="validation")
         # train_it = datagen.flow_from_directory(train_set_dir, batch_size=batch_size, target_size=target_size)
         # val_it = datagen.flow_from_directory(train_set_dir, batch_size=batch_size, target_size=target_size)
         # test_it = datagen.flow_from_directory(train_set_dir, batch_size=batch_size, target_size=target_size)
         val_it = None
-        test_it = None
     else:
         assert False
 
     dataset = (train_it, val_it, test_it)
 
     return dataset
-
-
-
-def evaluate_model(params, model, dataset):
-    (train_it, val_it, test_it) = dataset
-
-    # y_test = y_test.argmax(axis=1)  # Integer labels
-
-    X_batch, y_batch = train_it.next()
-
-    y_pred = model.predict(X_batch)   # Integer labels
-
-    a = 5
-
-    # utility.print_evaluation_report(y_test_pred, y_test, "Test set")
 
 
 def plot_random_images(dataset, num_imgs):
@@ -130,7 +115,7 @@ def get_base_model(model_name):
     else:
         assert False
 
-    base_model.summary()
+    # base_model.summary()
     return base_model, preproc_func, decode_preds_func
 
 
@@ -157,24 +142,26 @@ def train_new_classifier(dataset, params):
     # conv_base.summary()
 
     num_classes = params['num_classes']
+    epochs = params['epochs']
 
-    # add a global spatial average pooling layer
     x = conv_base.output
-    x = GlobalAveragePooling2D()(x)
-    x = Dense(100, activation='relu')(x)
+    x = GlobalAveragePooling2D()(x) # Can also use flatten here
+    x = Dense(1024, activation='relu')(x)
     predictions = Dense(num_classes, activation='softmax')(x)
 
     classifier = Model(inputs=conv_base.input, outputs=predictions)
 
     # Freeze all convolutional layers
-    for layer in base_model.layers:
+    # Very important! Otherwise the ResNet layers will be updated during training and it will be very slow (GPU runs out of memory)
+    for layer in conv_base.layers:
         layer.trainable = False
 
     classifier.compile(optimizer='adam', loss='categorical_crossentropy')
+    classifier.summary()
 
     (train_it, val_it, test_it) = dataset
 
-    history = classifier.fit_generator(train_it, steps_per_epoch=None, epochs=1,
+    history = classifier.fit_generator(train_it, steps_per_epoch=None, epochs=epochs,
                            validation_data=None, callbacks=None, verbose=1)
 
     return classifier, history
@@ -223,10 +210,9 @@ def predict_on_random_batch(dataset, base_model, decode_preds_func):
     utility.plot_images(X_batch[0:25], labels)
 
 
-def predict_on_training_data(dataset, base_model, decode_preds_func, params):
-    logging.info('Predicting on the full training set and evaluating')
-    (train_it, val_it, test_it) = dataset
-    n_samples = train_it.samples
+def predict_on_data(data_iter, model, params):
+    n_samples = data_iter.samples
+    logging.info('Predicting on dataset of size {}'.format(n_samples))
     num_classes = params['num_classes']
     batch_size = params['batch_size']
 
@@ -238,7 +224,7 @@ def predict_on_training_data(dataset, base_model, decode_preds_func, params):
     stop_progress = 100   # Percentage
 
     i = 0
-    for X_batch, y_batch in train_it:
+    for X_batch, y_batch in data_iter:
         progress = i * 100 / num_batches
         if progress >= next_print_progress:
             print('Progress = {:.0f}%'.format(progress))
@@ -249,7 +235,7 @@ def predict_on_training_data(dataset, base_model, decode_preds_func, params):
             predicted_batches = i + 1
             break
 
-        preds = base_model.predict(X_batch) # Need to be decoded later
+        preds = model.predict(X_batch) # Need to be decoded later
         y_preds[i * batch_size: (i + 1) * batch_size] = preds
         y_true[i * batch_size: (i + 1) * batch_size] = y_batch.argmax(axis=1)  # Integer labels (of loaded dataset)
 
@@ -258,20 +244,26 @@ def predict_on_training_data(dataset, base_model, decode_preds_func, params):
             predicted_batches = i
             break
 
+    y_true = y_true[0: batch_size * predicted_batches]
+    y_preds = y_preds[0: batch_size * predicted_batches]
+
+    return y_true, y_preds
+
+
+def convert_y_to_nids(y_true, y_preds, dataset_iter):
     logging.info('Decoding predictions')
-    decoded_preds = decode_preds_func(y_preds, top=3)  # Tuples of (class, description, probability) for top 3 classes
+    decoded_preds = decode_preds_func(y_preds,
+                                      top=3)  # Tuples of (class, description or nids, probability) for top 3 classes
 
     # logging.info('Predictions of 25 images')
     # print(*decoded_preds[0:25], sep="\n")  # First 25 of the batch
 
-    ints_to_labels_map = {idx: label for label, idx in train_it.class_indices.items()}
+    ints_to_labels_map = {idx: label for label, idx in dataset_iter.class_indices.items()}
 
-    y_true_labels = [ints_to_labels_map[y] for y in y_true[0: batch_size * predicted_batches]]
-    y_pred_labels = [pred[0][0] for pred in decoded_preds[0: batch_size * predicted_batches]]
+    y_true_labels = [ints_to_labels_map[y] for y in y_true]
+    y_pred_labels = [pred[0][0] for pred in decoded_preds]
 
-    logging.info('Evaluating predictions')
-    utility.print_evaluation_report(y_pred_labels, y_true_labels, "Training set")
-    logging.info('Accuracy will be bad, because the ResNet-50 model predicts out of the original 1000 images')
+    return y_true_labels, y_pred_labels
 
 
 if __name__ == "__main__":
@@ -279,29 +271,34 @@ if __name__ == "__main__":
     # print('Current dir = {}'.format(os.getcwd()))
 
     setup_logging()
-
     logging.info('Started experiment')
-
     exp_params = get_exp_params()
 
     base_model, preproc_func, decode_preds_func = get_base_model(exp_params['base_model'])
 
-    base_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
-
     dataset = get_dataset(exp_params, preproc_func)
+    (train_it, val_it, test_it) = dataset
 
-    # plot_random_images(dataset, 25)
+    # ------------------------------------------------------------------------
+    # Examine the training dataset and predictions on it by the base_model
 
-    # predict_on_random_batch(dataset, base_model, decode_preds_func)
-    # predict_on_training_data(dataset, base_model, decode_preds_func, exp_params)
+    # # plot_random_images(dataset, 25)
+    # # predict_on_random_batch(dataset, base_model, decode_preds_func)
+    # y_true, y_preds = predict_on_data(train_it, base_model, exp_params)
+    # y_true, y_preds = convert_y_to_nids(y_true, y_preds, train_it)
+    # utility.print_evaluation_report(y_preds, y_true, "Training set")
+    # logging.info('Accuracy will be bad, because the ResNet-50 model predicts out of the original 1000 images')
+
+    # ------------------------------------------------------------------------
+    # Train a new model with transfer learning
 
     new_model, history = transfer_learn(base_model, dataset, exp_params)
 
-    # utility.save_training_history(history, exp_params['results_dir'])
-    # utility.plot_training_history(history)
+    utility.save_training_history(history, exp_params['results_dir'])
 
-    # evaluate_model(exp_params, model, dataset)
+    y_true, y_preds = predict_on_data(test_it, new_model, exp_params)
+    y_preds_ints = y_preds.argmax(axis=1)  # Integer labels
+    utility.print_evaluation_report(y_preds_ints, y_true, "Test set")
 
     logging.info('Finished experiment')
-
 
