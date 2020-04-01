@@ -4,21 +4,26 @@ import keras
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications import vgg16
 from keras.applications import resnet50
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, GlobalAveragePooling2D
+from keras.models import Sequential, Model
 import cnn
 import utility
 
 
 def get_exp_params():
     params = dict()
+
     params['base_model'] = 'resnet-50'  # Options resnet-50, vgg16
+    params['conv_base_output_shape'] = (None, 7, 7, 2048)  # For resnet-50
     params['expected_img_size'] = (224, 224)
+
     params['dataset'] = 'tiny_imagenet'   # Options: tiny_imagenet
     # Options: train_new_classifier, train_all_from_scratch, train_new_classifier_and_fine_tune
     # See the transfer_learn() function for descriptions of strategies
     params['tl_strategy'] = 'train_new_classifier'
     params['dataset_portion'] = 1   # To reduce dataset for quick testing
-    params['num_classes'] = 1000
-    params['batch_size'] = 128
+    params['num_classes'] = 200
+    params['batch_size'] = 32
     params['epochs'] = 10
     params['early_stop_patience'] = -1  # Disabled
     params['tensorboard_log_dir'] = 'output'
@@ -58,9 +63,17 @@ def get_dataset(params, preproc_func):
     if dataset_name == 'tiny_imagenet':
         logging.info("Creating tiny_imagenet data generators")
         datagen = ImageDataGenerator(preprocessing_function=preproc_func)
-        train_it = datagen.flow_from_directory('../../Datasets/tiny-imagenet-200-truncated/train/', batch_size=batch_size, target_size=target_size)
-        # val_it = datagen.flow_from_directory('../../Datasets/tiny-imagenet-200/train/', batch_size=batch_size, target_size=target_size)
-        # test_it = datagen.flow_from_directory('../../Datasets/tiny-imagenet-200/train/', batch_size=batch_size, target_size=target_size)
+        train_set_dir = '../../Datasets/tiny-imagenet-200-truncated/train/'
+        class_labels_file = '../../Datasets/tiny-imagenet-200-truncated/wnids.txt'
+
+        with open(class_labels_file, 'r') as f:
+            labels = f.readlines()
+            labels = [label.rstrip() for label in labels]
+
+        train_it = datagen.flow_from_directory(train_set_dir, classes=labels, batch_size=batch_size, target_size=target_size)
+        # train_it = datagen.flow_from_directory(train_set_dir, batch_size=batch_size, target_size=target_size)
+        # val_it = datagen.flow_from_directory(train_set_dir, batch_size=batch_size, target_size=target_size)
+        # test_it = datagen.flow_from_directory(train_set_dir, batch_size=batch_size, target_size=target_size)
         val_it = None
         test_it = None
     else:
@@ -70,23 +83,6 @@ def get_dataset(params, preproc_func):
 
     return dataset
 
-
-def create_and_train_model(params, dataset):
-    logging.info('Initializing cnn_model')
-    cnn_model = cnn.CNN()
-    cnn_model.initialize(params)
-
-    (X_train, y_train), (X_val, y_val) = dataset
-
-    logging.info('Training cnn_model')
-    t0 = time.time()
-
-    history = cnn_model.fit(X_train, y_train, X_val, y_val)
-
-    time_to_train = time.time() - t0
-    logging.info('Training complete. time_to_train = {:.2f} sec, {:.2f} min'.format(time_to_train, time_to_train / 60))
-
-    return cnn_model, history
 
 
 def evaluate_model(params, model, dataset):
@@ -122,9 +118,7 @@ def plot_random_images(dataset, num_imgs):
     utility.plot_images(X, y_labels)
 
 
-def get_base_model(params):
-    model_name = exp_params['base_model']
-
+def get_base_model(model_name):
     if model_name == 'vgg16':
         base_model = vgg16.VGG16(weights='imagenet')
         preproc_func = vgg16.preprocess_input
@@ -140,18 +134,50 @@ def get_base_model(params):
     return base_model, preproc_func, decode_preds_func
 
 
-def train_new_classifier(base_model, dataset, params):
-    pass
-    # (train_it, val_it, test_it) = dataset
-    #
-    # i = 0
-    # for inputs_batch, labels_batch in train_it:
-    #     features_batch = conv_base.predict(inputs_batch)
-    #     features[i * batch_size: (i + 1) * batch_size] = features_batch
-    #     labels[i * batch_size: (i + 1) * batch_size] = labels_batch
-    #     i += 1
-    #     if i * batch_size >= sample_count:
-    #         break
+def get_convolutional_base(model_name):
+    if model_name == 'vgg16':
+        conv_base = vgg16.VGG16(weights='imagenet', include_top=False)
+    elif model_name == 'resnet-50':
+        conv_base = resnet50.ResNet50(weights='imagenet', include_top=False)
+    else:
+        assert False
+
+    return conv_base
+
+#
+# def train_new_classifier(dataset, params):
+#     logging.info('Training a new classifier on top of convolutional base')
+#     X_features, y = extract_features(dataset, params)
+#     print(X_features.shape)
+#     print(y.shape)
+
+
+def train_new_classifier(dataset, params):
+    conv_base = get_convolutional_base(exp_params['base_model'])
+    # conv_base.summary()
+
+    num_classes = params['num_classes']
+
+    # add a global spatial average pooling layer
+    x = conv_base.output
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(100, activation='relu')(x)
+    predictions = Dense(num_classes, activation='softmax')(x)
+
+    classifier = Model(inputs=conv_base.input, outputs=predictions)
+
+    # Freeze all convolutional layers
+    for layer in base_model.layers:
+        layer.trainable = False
+
+    classifier.compile(optimizer='adam', loss='categorical_crossentropy')
+
+    (train_it, val_it, test_it) = dataset
+
+    history = classifier.fit_generator(train_it, steps_per_epoch=None, epochs=1,
+                           validation_data=None, callbacks=None, verbose=1)
+
+    return classifier, history
 
 
 def transfer_learn(base_model, dataset, params):
@@ -161,7 +187,7 @@ def transfer_learn(base_model, dataset, params):
         # Remove the fully connected layers and use output from the convolutional base as extracted features
         # Train a new classifier on this data
         # Good for when new dataset is similar to previous, but small
-        new_model, history = train_new_classifier(base_model, dataset, params)
+        new_model, history = train_new_classifier(dataset, params)
     elif tl_strategy == 'train_all_from_scratch':
         # Do not use pre-trained weights in the base model (reset them to random)
         # Train the full model from scratch (with a suitable output layer matching the no. of classes in the current problem)
@@ -179,7 +205,7 @@ def transfer_learn(base_model, dataset, params):
     else:
         assert False
 
-    return new_model
+    return new_model, history
 
 
 def predict_on_random_batch(dataset, base_model, decode_preds_func):
@@ -209,7 +235,7 @@ def predict_on_training_data(dataset, base_model, decode_preds_func, params):
 
     num_batches = n_samples // batch_size
     next_print_progress = 0
-    stop_progress = 100 #Percentage
+    stop_progress = 100   # Percentage
 
     i = 0
     for X_batch, y_batch in train_it:
@@ -220,7 +246,7 @@ def predict_on_training_data(dataset, base_model, decode_preds_func, params):
 
         if progress >= stop_progress:
             print('Progress = {:.0f}%. Stopping predictions'.format(progress))
-            predicted_batches = i
+            predicted_batches = i + 1
             break
 
         preds = base_model.predict(X_batch) # Need to be decoded later
@@ -245,6 +271,7 @@ def predict_on_training_data(dataset, base_model, decode_preds_func, params):
 
     logging.info('Evaluating predictions')
     utility.print_evaluation_report(y_pred_labels, y_true_labels, "Training set")
+    logging.info('Accuracy will be bad, because the ResNet-50 model predicts out of the original 1000 images')
 
 
 if __name__ == "__main__":
@@ -257,18 +284,18 @@ if __name__ == "__main__":
 
     exp_params = get_exp_params()
 
-    base_model, preproc_func, decode_preds_func = get_base_model(exp_params)
+    base_model, preproc_func, decode_preds_func = get_base_model(exp_params['base_model'])
 
-    base_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+    base_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
 
     dataset = get_dataset(exp_params, preproc_func)
 
     # plot_random_images(dataset, 25)
 
     # predict_on_random_batch(dataset, base_model, decode_preds_func)
-    predict_on_training_data(dataset, base_model, decode_preds_func, exp_params)
+    # predict_on_training_data(dataset, base_model, decode_preds_func, exp_params)
 
-    # new_model, history = transfer_learn(base_model, dataset, exp_params)
+    new_model, history = transfer_learn(base_model, dataset, exp_params)
 
     # utility.save_training_history(history, exp_params['results_dir'])
     # utility.plot_training_history(history)
