@@ -1,0 +1,1 @@
+# ToDo: Create a new class for transfer learnable CNN models and the ability to set a TL strategy

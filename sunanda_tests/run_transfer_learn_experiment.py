@@ -1,3 +1,13 @@
+# Implements the 'train_new_classifier' Transfer Learning strategy (see transfer_learn() function)
+# ToDo: Create a new class for transfer learnable CNN models and the ability to set a TL strategy
+# Resources (code examples and model descriptions) used are given below
+# Illustrated: 10 CNN Architectures - https://towardsdatascience.com/illustrated-10-cnn-architectures-95d78ace614d#c5a6
+# Keras Applications - https://keras.io/applications/#extract-features-with-vgg16
+# https://machinelearningmastery.com/how-to-use-transfer-learning-when-developing-convolutional-neural-network-models/
+# Transfer learning from pre-trained models - https://towardsdatascience.com/transfer-learning-from-pre-trained-models-f2393f124751
+# A Comprehensive Hands-on Guide to Transfer Learning - https://towardsdatascience.com/transfer-learning-from-pre-trained-models-f2393f124751
+
+
 import logging, time, os
 import numpy as np
 import keras
