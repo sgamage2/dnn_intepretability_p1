@@ -32,6 +32,7 @@ from interpretability_benchmark.saliency_data_gen.data_helper import SALIENCY_BA
 from interpretability_benchmark.saliency_data_gen.saliency_helper import generate_saliency_image
 from interpretability_benchmark.saliency_data_gen.saliency_helper import get_saliency_image
 from interpretability_benchmark.utils import resnet_model
+
 tf.disable_v2_behavior()
 
 flags.DEFINE_string('master', '', 'Name of the TensorFlow master to use.')
@@ -67,148 +68,148 @@ N_CLASSES = {'imagenet': 1000, 'food_101': 101, 'birdsnap': 500}
 
 
 class ProcessSaliencyMaps(object):
-  """Helper class that provides TensorFlow image coding utilities."""
+    """Helper class that provides TensorFlow image coding utilities."""
 
-  def __init__(self, dataset_name, saliency_method, ckpt_directory,
-               num_label_classes):
-    # Create a single Session to run all image coding calls.
+    def __init__(self, dataset_name, saliency_method, ckpt_directory,
+                 num_label_classes):
+        # Create a single Session to run all image coding calls.
 
-    self._dataset_name = dataset_name
-    self._saliency_method = saliency_method
-    self._ckpt_directory = ckpt_directory
-    self._num_label_classes = num_label_classes
+        self._dataset_name = dataset_name
+        self._saliency_method = saliency_method
+        self._ckpt_directory = ckpt_directory
+        self._num_label_classes = num_label_classes
 
-  def produce_saliency_map(self, data_path, writer):
-    """produces a saliency map."""
+    def produce_saliency_map(self, data_path, writer):
+        """produces a saliency map."""
 
-    self._dataset = DataIterator(
-        data_path,
-        self._dataset_name,
-        preprocessing=False,
-        test_small_sample=FLAGS.test_small_sample)
+        self._dataset = DataIterator(
+            data_path,
+            self._dataset_name,
+            preprocessing=False,
+            test_small_sample=FLAGS.test_small_sample)
 
-    self._graph = tf.Graph()
-    with self._graph.as_default():
-      image_raw, image_processed, label = self._dataset.input_fn()
+        self._graph = tf.Graph()
+        with self._graph.as_default():
+            image_raw, image_processed, label = self._dataset.input_fn()
 
-      image_processed -= tf.constant(
-          MEAN_RGB, shape=[1, 1, 3], dtype=image_processed.dtype)
-      image_processed /= tf.constant(
-          STDDEV_RGB, shape=[1, 1, 3], dtype=image_processed.dtype)
+            image_processed -= tf.constant(
+                MEAN_RGB, shape=[1, 1, 3], dtype=image_processed.dtype)
+            image_processed /= tf.constant(
+                STDDEV_RGB, shape=[1, 1, 3], dtype=image_processed.dtype)
 
-      network = resnet_model.resnet_50(
-          num_classes=self._num_label_classes,
-          data_format='channels_last',
-      )
+            network = resnet_model.resnet_50(
+                num_classes=self._num_label_classes,
+                data_format='channels_last',
+            )
 
-      logits = network(inputs=image_processed, is_training=False)
+            logits = network(inputs=image_processed, is_training=False)
 
-      prediction = tf.cast(tf.argmax(logits, axis=1), tf.int32)
+            prediction = tf.cast(tf.argmax(logits, axis=1), tf.int32)
 
-      self._neuron_selector = tf.placeholder(tf.int32)
+            self._neuron_selector = tf.placeholder(tf.int32)
 
-      y = logits[0][self._neuron_selector]
+            y = logits[0][self._neuron_selector]
 
-      self._sess = tf.Session(graph=self._graph)
-      saver = tf.train.Saver()
+            self._sess = tf.Session(graph=self._graph)
+            saver = tf.train.Saver()
 
-      saver.restore(self._sess, self._ckpt_directory)
+            saver.restore(self._sess, self._ckpt_directory)
 
-      self._gradient_placeholder = get_saliency_image(
-          self._graph, self._sess, y, image_processed, 'gradient')
-      self._back_prop_placeholder = get_saliency_image(
-          self._graph, self._sess, y, image_processed, 'guided_backprop')
-      self._integrated_gradient_placeholder = get_saliency_image(
-          self._graph, self._sess, y, image_processed, 'integrated_gradients')
+            self._gradient_placeholder = get_saliency_image(
+                self._graph, self._sess, y, image_processed, 'gradient')
+            self._back_prop_placeholder = get_saliency_image(
+                self._graph, self._sess, y, image_processed, 'guided_backprop')
+            self._integrated_gradient_placeholder = get_saliency_image(
+                self._graph, self._sess, y, image_processed, 'integrated_gradients')
 
-      baseline = SALIENCY_BASELINE['resnet_50']
+            baseline = SALIENCY_BASELINE['resnet_50']
 
-      self._coord = tf.train.Coordinator()
-      threads = tf.train.start_queue_runners(sess=self._sess, coord=self._coord)
+            self._coord = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(sess=self._sess, coord=self._coord)
 
-      example_count = 0
-      try:
-        while True:
-          img_out, raw_img_out, label_out, prediction_out = self._sess.run(
-              [image_processed, image_raw, label, prediction])
-          if img_out.shape[3] == 3:
-            img_out = np.squeeze(img_out)
+            example_count = 0
+            try:
+                while True:
+                    img_out, raw_img_out, label_out, prediction_out = self._sess.run(
+                        [image_processed, image_raw, label, prediction])
+                    if img_out.shape[3] == 3:
+                        img_out = np.squeeze(img_out)
 
-            feed_dict = {self._neuron_selector: prediction_out[0]}
-            if self._saliency_method != 'SOBEL':
-              saliency_map = generate_saliency_image(
-                  self._saliency_method, img_out, feed_dict,
-                  self._gradient_placeholder, self._back_prop_placeholder,
-                  self._integrated_gradient_placeholder, baseline)
-            else:
-              saliency_map = ndimage.sobel(img_out, axis=0)
+                        feed_dict = {self._neuron_selector: prediction_out[0]}
+                        if self._saliency_method != 'SOBEL':
+                            saliency_map = generate_saliency_image(
+                                self._saliency_method, img_out, feed_dict,
+                                self._gradient_placeholder, self._back_prop_placeholder,
+                                self._integrated_gradient_placeholder, baseline)
+                        else:
+                            saliency_map = ndimage.sobel(img_out, axis=0)
 
-          saliency_map = saliency_map.astype(np.float32)
-          saliency_map = np.reshape(saliency_map, [-1])
-          example = image_to_tfexample(
-              raw_image=raw_img_out[0], maps=saliency_map, label=label_out)
-          writer.write(example.SerializeToString())
-          example_count += 1
+                    saliency_map = saliency_map.astype(np.float32)
+                    saliency_map = np.reshape(saliency_map, [-1])
+                    example = image_to_tfexample(
+                        raw_image=raw_img_out[0], maps=saliency_map, label=label_out)
+                    writer.write(example.SerializeToString())
+                    example_count += 1
 
-          if FLAGS.test_small_sample:
-            if example_count == 2:
-              break
+                    if FLAGS.test_small_sample:
+                        if example_count == 2:
+                            break
 
-      except tf.errors.OutOfRangeError:
-        print('Finished number of images:', example_count)
-      finally:
-        self._coord.request_stop()
-        self._coord.join(threads)
-        writer.close()
+            except tf.errors.OutOfRangeError:
+                print('Finished number of images:', example_count)
+            finally:
+                self._coord.request_stop()
+                self._coord.join(threads)
+                writer.close()
 
 
 def generate_dataset(data_directory, dataset_name, num_shards, output_directory,
                      ckpt_directory, num_label_classes, filenames,
                      saliency_method):
-  """Generate a dataset."""
+    """Generate a dataset."""
 
-  data_gen = ProcessSaliencyMaps(
-      dataset_name=dataset_name,
-      ckpt_directory=ckpt_directory,
-      num_label_classes=num_label_classes,
-      saliency_method=saliency_method)
+    data_gen = ProcessSaliencyMaps(
+        dataset_name=dataset_name,
+        ckpt_directory=ckpt_directory,
+        num_label_classes=num_label_classes,
+        saliency_method=saliency_method)
 
-  counter = 0
-  for i in range(num_shards):
-    filename = filenames[i]
-    data_path = data_directory + filename
-    output_file = os.path.join(output_directory, filename)
-    writer = tf.python_io.TFRecordWriter(output_file)
-    _ = data_gen.produce_saliency_map(data_path, writer)
-    counter += 1
-    print('Finished shard number:', counter)
+    counter = 0
+    for i in range(num_shards):
+        filename = filenames[i]
+        data_path = data_directory + filename
+        output_file = os.path.join(output_directory, filename)
+        writer = tf.python_io.TFRecordWriter(output_file)
+        _ = data_gen.produce_saliency_map(data_path, writer)
+        counter += 1
+        print('Finished shard number:', counter)
 
-  print('Finished outputting all records to the directory.')
+    print('Finished outputting all records to the directory.')
 
 
 def main(argv):
-  del argv  # Unused.
+    del argv  # Unused.
 
-  if FLAGS.test_small_sample:
-    filenames = ['test_small_sample']
-    num_shards = 1
-    output_dir = FLAGS.output_dir
-  else:
-    output_dir = ('%s/%s/%s/%s' % (FLAGS.output_dir, FLAGS.dataset_name,
-                                   'resnet_50', FLAGS.saliency_method))
-    filenames = tf.gfile.ListDirectory(FLAGS.data_path)
-    num_shards = len(filenames)
+    if FLAGS.test_small_sample:
+        filenames = ['test_small_sample']
+        num_shards = 1
+        output_dir = FLAGS.output_dir
+    else:
+        output_dir = ('%s/%s/%s/%s' % (FLAGS.output_dir, FLAGS.dataset_name,
+                                       'resnet_50', FLAGS.saliency_method))
+        filenames = tf.gfile.ListDirectory(FLAGS.data_path)
+        num_shards = len(filenames)
 
-  generate_dataset(
-      data_directory=FLAGS.data_path,
-      output_directory=output_dir,
-      num_shards=num_shards,
-      dataset_name=FLAGS.dataset_name,
-      ckpt_directory=FLAGS.ckpt_directory,
-      num_label_classes=N_CLASSES[FLAGS.dataset_name],
-      filenames=filenames,
-      saliency_method=FLAGS.saliency_method)
+    generate_dataset(
+        data_directory=FLAGS.data_path,
+        output_directory=output_dir,
+        num_shards=num_shards,
+        dataset_name=FLAGS.dataset_name,
+        ckpt_directory=FLAGS.ckpt_directory,
+        num_label_classes=N_CLASSES[FLAGS.dataset_name],
+        filenames=filenames,
+        saliency_method=FLAGS.saliency_method)
 
 
 if __name__ == '__main__':
-  app.run(main)
+    app.run(main)

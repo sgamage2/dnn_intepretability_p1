@@ -152,224 +152,224 @@ birdsnap_params = {
 
 def compute_lr(current_epoch, initial_learning_rate, train_batch_size,
                lr_schedule):
-  """Computes learning rate schedule."""
-  scaled_lr = initial_learning_rate * (train_batch_size / 256.0)
+    """Computes learning rate schedule."""
+    scaled_lr = initial_learning_rate * (train_batch_size / 256.0)
 
-  decay_rate = (
-      scaled_lr * lr_schedule[0][0] * current_epoch / lr_schedule[0][1])
-  for mult, start_epoch in lr_schedule:
-    decay_rate = tf.where(current_epoch < start_epoch, decay_rate,
-                          scaled_lr * mult)
-  return decay_rate
+    decay_rate = (
+            scaled_lr * lr_schedule[0][0] * current_epoch / lr_schedule[0][1])
+    for mult, start_epoch in lr_schedule:
+        decay_rate = tf.where(current_epoch < start_epoch, decay_rate,
+                              scaled_lr * mult)
+    return decay_rate
 
 
 def resnet_model_fn(features, labels, mode, params):
-  """Setup of training and eval for modified dataset using a ResNet-50.
+    """Setup of training and eval for modified dataset using a ResNet-50.
 
-  Args:
-    features: A float32 batch of images.
-    labels: A int32 batch of labels.
-    mode: Specifies whether training or evaluation.
-    params: Dictionary of parameters passed to the model.
+    Args:
+      features: A float32 batch of images.
+      labels: A int32 batch of labels.
+      mode: Specifies whether training or evaluation.
+      params: Dictionary of parameters passed to the model.
 
-  Returns:
-    Model estimator w specifications.
-  """
+    Returns:
+      Model estimator w specifications.
+    """
 
-  if isinstance(features, dict):
-    features = features['feature']
+    if isinstance(features, dict):
+        features = features['feature']
 
-  mean_rgb = params['mean_rgb']
-  stddev_rgb = params['stddev_rgb']
-  features -= tf.constant(mean_rgb, shape=[1, 1, 3], dtype=features.dtype)
-  features /= tf.constant(stddev_rgb, shape=[1, 1, 3], dtype=features.dtype)
+    mean_rgb = params['mean_rgb']
+    stddev_rgb = params['stddev_rgb']
+    features -= tf.constant(mean_rgb, shape=[1, 1, 3], dtype=features.dtype)
+    features /= tf.constant(stddev_rgb, shape=[1, 1, 3], dtype=features.dtype)
 
-  train_batch_size = params['train_batch_size']
-
-  steps_per_epoch = params['num_train_images'] / train_batch_size
-  initial_learning_rate = params['base_learning_rate']
-  num_label_classes = params['num_label_classes']
-
-  network = resnet_model.resnet_50(
-      num_classes=num_label_classes, data_format=params['data_format'])
-
-  logits = network(
-      inputs=features, is_training=(mode == tf.estimator.ModeKeys.TRAIN))
-
-  output_dir = params['output_dir']
-  weight_decay = params['weight_decay']
-
-  one_hot_labels = tf.one_hot(labels, num_label_classes)
-  cross_entropy = tf.losses.softmax_cross_entropy(
-      logits=logits, onehot_labels=one_hot_labels, label_smoothing=0.1)
-
-  loss = cross_entropy + weight_decay * tf.add_n([
-      tf.nn.l2_loss(v)
-      for v in tf.trainable_variables()
-      if 'batch_normalization' not in v.name
-  ])
-  host_call = None
-  if mode == tf.estimator.ModeKeys.TRAIN:
-
-    global_step = tf.train.get_global_step()
+    train_batch_size = params['train_batch_size']
 
     steps_per_epoch = params['num_train_images'] / train_batch_size
-    current_epoch = (tf.cast(global_step, tf.float32) / steps_per_epoch)
-    learning_rate = compute_lr(current_epoch, initial_learning_rate,
-                               train_batch_size, params['lr_schedule'])
-    optimizer = tf.train.MomentumOptimizer(
-        learning_rate=learning_rate,
-        momentum=params['momentum'],
-        use_nesterov=True)
+    initial_learning_rate = params['base_learning_rate']
+    num_label_classes = params['num_label_classes']
 
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_ops), tf.name_scope('train'):
-      train_op = optimizer.minimize(loss, global_step)
+    network = resnet_model.resnet_50(
+        num_classes=num_label_classes, data_format=params['data_format'])
 
-    with tf2.summary.create_file_writer(output_dir).as_default():
-      with tf2.summary.record_if(True):
-        tf2.summary.scalar('loss', loss, step=global_step)
-        tf2.summary.scalar('learning_rate', learning_rate, step=global_step)
-        tf2.summary.scalar('current_epoch', current_epoch, step=global_step)
-        tf2.summary.scalar('steps_per_epoch', steps_per_epoch, step=global_step)
-        tf2.summary.scalar('weight_decay', weight_decay, step=global_step)
+    logits = network(
+        inputs=features, is_training=(mode == tf.estimator.ModeKeys.TRAIN))
 
-      tf.summary.all_v2_summary_ops()
+    output_dir = params['output_dir']
+    weight_decay = params['weight_decay']
 
-  else:
-    train_op = None
+    one_hot_labels = tf.one_hot(labels, num_label_classes)
+    cross_entropy = tf.losses.softmax_cross_entropy(
+        logits=logits, onehot_labels=one_hot_labels, label_smoothing=0.1)
 
-  eval_metrics = {}
-  if mode == tf.estimator.ModeKeys.EVAL:
-    train_op = None
-    predictions = tf.argmax(logits, axis=1)
-    eval_metrics['top_1_accuracy'] = tf.metrics.accuracy(labels, predictions)
-    in_top_5 = tf.cast(tf.nn.in_top_k(logits, labels, 5), tf.float32)
-    eval_metrics['top_5_accuracy'] = tf.metrics.mean(in_top_5)
+    loss = cross_entropy + weight_decay * tf.add_n([
+        tf.nn.l2_loss(v)
+        for v in tf.trainable_variables()
+        if 'batch_normalization' not in v.name
+    ])
+    host_call = None
+    if mode == tf.estimator.ModeKeys.TRAIN:
 
-  return tf.estimator.EstimatorSpec(
-      training_hooks=host_call,
-      mode=mode,
-      loss=loss,
-      train_op=train_op,
-      eval_metric_ops=eval_metrics)
+        global_step = tf.train.get_global_step()
+
+        steps_per_epoch = params['num_train_images'] / train_batch_size
+        current_epoch = (tf.cast(global_step, tf.float32) / steps_per_epoch)
+        learning_rate = compute_lr(current_epoch, initial_learning_rate,
+                                   train_batch_size, params['lr_schedule'])
+        optimizer = tf.train.MomentumOptimizer(
+            learning_rate=learning_rate,
+            momentum=params['momentum'],
+            use_nesterov=True)
+
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops), tf.name_scope('train'):
+            train_op = optimizer.minimize(loss, global_step)
+
+        with tf2.summary.create_file_writer(output_dir).as_default():
+            with tf2.summary.record_if(True):
+                tf2.summary.scalar('loss', loss, step=global_step)
+                tf2.summary.scalar('learning_rate', learning_rate, step=global_step)
+                tf2.summary.scalar('current_epoch', current_epoch, step=global_step)
+                tf2.summary.scalar('steps_per_epoch', steps_per_epoch, step=global_step)
+                tf2.summary.scalar('weight_decay', weight_decay, step=global_step)
+
+            tf.summary.all_v2_summary_ops()
+
+    else:
+        train_op = None
+
+    eval_metrics = {}
+    if mode == tf.estimator.ModeKeys.EVAL:
+        train_op = None
+        predictions = tf.argmax(logits, axis=1)
+        eval_metrics['top_1_accuracy'] = tf.metrics.accuracy(labels, predictions)
+        in_top_5 = tf.cast(tf.nn.in_top_k(logits, labels, 5), tf.float32)
+        eval_metrics['top_5_accuracy'] = tf.metrics.mean(in_top_5)
+
+    return tf.estimator.EstimatorSpec(
+        training_hooks=host_call,
+        mode=mode,
+        loss=loss,
+        train_op=train_op,
+        eval_metric_ops=eval_metrics)
 
 
 def main(argv):
-  del argv  # Unused.
+    del argv  # Unused.
 
-  if FLAGS.squared_value:
-    is_squared = 'squared'
-  else:
-    is_squared = 'not_squared'
-  if FLAGS.keep_information:
-    info_keep = 'keep'
-  else:
-    info_keep = 'remove'
+    if FLAGS.squared_value:
+        is_squared = 'squared'
+    else:
+        is_squared = 'not_squared'
+    if FLAGS.keep_information:
+        info_keep = 'keep'
+    else:
+        info_keep = 'remove'
 
-  if FLAGS.dataset_name == 'food_101':
-    params = food_101_params
-  elif FLAGS.dataset_name == 'imagenet':
-    params = imagenet_params
-  elif FLAGS.dataset_name == 'birdsnap':
-    params = birdsnap_params
-  else:
-    raise ValueError('Dataset type is not known %s' % (FLAGS.dataset))
+    if FLAGS.dataset_name == 'food_101':
+        params = food_101_params
+    elif FLAGS.dataset_name == 'imagenet':
+        params = imagenet_params
+    elif FLAGS.dataset_name == 'birdsnap':
+        params = birdsnap_params
+    else:
+        raise ValueError('Dataset type is not known %s' % (FLAGS.dataset))
 
-  if FLAGS.test_small_sample:
-    model_dir = '/tmp/lalala/'
-  else:
-    model_dir = os.path.join(FLAGS.output_dir, FLAGS.dataset_name,
-                             FLAGS.transformation, str(FLAGS.threshold),
-                             str(params['base_learning_rate']),
-                             str(params['weight_decay']), is_squared, info_keep)
+    if FLAGS.test_small_sample:
+        model_dir = '/tmp/lalala/'
+    else:
+        model_dir = os.path.join(FLAGS.output_dir, FLAGS.dataset_name,
+                                 FLAGS.transformation, str(FLAGS.threshold),
+                                 str(params['base_learning_rate']),
+                                 str(params['weight_decay']), is_squared, info_keep)
 
-    if FLAGS.transformation in ['modified_image', 'raw_saliency_map']:
-      model_dir = os.path.join(model_dir, FLAGS.saliency_method)
+        if FLAGS.transformation in ['modified_image', 'raw_saliency_map']:
+            model_dir = os.path.join(model_dir, FLAGS.saliency_method)
 
-  if FLAGS.mode == 'eval':
-    split = 'validation'
-  else:
-    split = 'training'
+    if FLAGS.mode == 'eval':
+        split = 'validation'
+    else:
+        split = 'training'
 
-  mean_stats = [0.485, 0.456, 0.406]
-  std_stats = [0.229, 0.224, 0.225]
-  update_params = {
-      'mean_rgb': mean_stats,
-      'stddev_rgb': std_stats,
-      'lr_schedule': [  # (multiplier, epoch to start) tuples
-          (1.0, 5), (0.1, 30), (0.01, 60), (0.001, 80)
-      ],
-      'momentum': 0.9,
-      'data_format': 'channels_last'
-  }
-  params.update(update_params)
-  sal_method = saliency_dict[FLAGS.saliency_method]
-  if FLAGS.test_small_sample:
+    mean_stats = [0.485, 0.456, 0.406]
+    std_stats = [0.229, 0.224, 0.225]
     update_params = {
-        'train_batch_size': 2,
-        'eval_batch_size': 2,
-        'num_train_steps': 10,
-        'num_images': 2
+        'mean_rgb': mean_stats,
+        'stddev_rgb': std_stats,
+        'lr_schedule': [  # (multiplier, epoch to start) tuples
+            (1.0, 5), (0.1, 30), (0.01, 60), (0.001, 80)
+        ],
+        'momentum': 0.9,
+        'data_format': 'channels_last'
     }
     params.update(update_params)
+    sal_method = saliency_dict[FLAGS.saliency_method]
+    if FLAGS.test_small_sample:
+        update_params = {
+            'train_batch_size': 2,
+            'eval_batch_size': 2,
+            'num_train_steps': 10,
+            'num_images': 2
+        }
+        params.update(update_params)
 
-  data_directory = os.path.join(FLAGS.base_dir, FLAGS.dataset_name,
-                                '2018-12-10', 'resnet_50', sal_method,
-                                split + '*')
+    data_directory = os.path.join(FLAGS.base_dir, FLAGS.dataset_name,
+                                  '2018-12-10', 'resnet_50', sal_method,
+                                  split + '*')
 
-  dataset_ = data_input.DataIterator(
-      mode=FLAGS.mode,
-      data_directory=data_directory,
-      saliency_method=FLAGS.saliency_method,
-      transformation=FLAGS.transformation,
-      threshold=FLAGS.threshold,
-      keep_information=FLAGS.keep_information,
-      use_squared_value=FLAGS.squared_value,
-      mean_stats=mean_stats,
-      std_stats=std_stats,
-      test_small_sample=FLAGS.test_small_sample,
-      num_cores=FLAGS.num_cores)
+    dataset_ = data_input.DataIterator(
+        mode=FLAGS.mode,
+        data_directory=data_directory,
+        saliency_method=FLAGS.saliency_method,
+        transformation=FLAGS.transformation,
+        threshold=FLAGS.threshold,
+        keep_information=FLAGS.keep_information,
+        use_squared_value=FLAGS.squared_value,
+        mean_stats=mean_stats,
+        std_stats=std_stats,
+        test_small_sample=FLAGS.test_small_sample,
+        num_cores=FLAGS.num_cores)
 
-  params['output_dir'] = model_dir
-  if FLAGS.mode == 'train':
-    params['batch_size'] = params['train_batch_size']
-  else:
-    params['batch_size'] = params['eval_batch_size']
-
-  num_train_steps = params['num_train_steps']
-  eval_steps = params['num_eval_images'] // params['batch_size']
-
-  run_config = tf.estimator.RunConfig(
-      model_dir=model_dir, save_checkpoints_steps=FLAGS.steps_per_checkpoint)
-
-  classifier = tf.estimator.Estimator(
-      model_fn=resnet_model_fn,
-      model_dir=model_dir,
-      params=params,
-      config=run_config)
-
-  if FLAGS.mode == 'eval':
-    # Run evaluation when there's a new checkpoint
-    for ckpt in tf2.training.checkpoints_iterator(model_dir):
-      tf.logging.info('Starting to evaluate.')
-      try:
-        classifier.evaluate(
-            input_fn=dataset_.input_fn, steps=eval_steps, checkpoint_path=ckpt)
-        current_step = int(os.path.basename(ckpt).split('-')[1])
-        if current_step >= num_train_steps:
-          print('Evaluation finished after training step %d' % current_step)
-          break
-
-      except tf.errors.NotFoundError:
-        tf.logging.info('Checkpoint was not found, skipping checkpoint.')
-
-  else:
+    params['output_dir'] = model_dir
     if FLAGS.mode == 'train':
-      tf.logging.info('start training...')
-      classifier.train(input_fn=dataset_.input_fn, max_steps=num_train_steps)
-      tf.logging.info('finished training.')
+        params['batch_size'] = params['train_batch_size']
+    else:
+        params['batch_size'] = params['eval_batch_size']
+
+    num_train_steps = params['num_train_steps']
+    eval_steps = params['num_eval_images'] // params['batch_size']
+
+    run_config = tf.estimator.RunConfig(
+        model_dir=model_dir, save_checkpoints_steps=FLAGS.steps_per_checkpoint)
+
+    classifier = tf.estimator.Estimator(
+        model_fn=resnet_model_fn,
+        model_dir=model_dir,
+        params=params,
+        config=run_config)
+
+    if FLAGS.mode == 'eval':
+        # Run evaluation when there's a new checkpoint
+        for ckpt in tf2.training.checkpoints_iterator(model_dir):
+            tf.logging.info('Starting to evaluate.')
+            try:
+                classifier.evaluate(
+                    input_fn=dataset_.input_fn, steps=eval_steps, checkpoint_path=ckpt)
+                current_step = int(os.path.basename(ckpt).split('-')[1])
+                if current_step >= num_train_steps:
+                    print('Evaluation finished after training step %d' % current_step)
+                    break
+
+            except tf.errors.NotFoundError:
+                tf.logging.info('Checkpoint was not found, skipping checkpoint.')
+
+    else:
+        if FLAGS.mode == 'train':
+            tf.logging.info('start training...')
+            classifier.train(input_fn=dataset_.input_fn, max_steps=num_train_steps)
+            tf.logging.info('finished training.')
 
 
 if __name__ == '__main__':
-  app.run(main)
+    app.run(main)
