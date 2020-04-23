@@ -1,0 +1,24 @@
+Running scripts in the interpretability_benchmark directory
+
+1. Pycharm: mark the repo directory (dnn_intepretability_p1) as source root (Right click --> Mark directory as --> Sources root)
+
+2. On the shell:
+2.1. Navigate to the repo directory (dnn_intepretability_p1)
+2.2. Run the script as a module (see below
+
+python -m interpretability_benchmark.train_food101_resnet
+
+
+-----------
+
+Training a ResNet on the food-101 Dataset
+
+1. Download the dataset, extract it and create a smaller version of the dataset for fast experimenting (already available - see step 2)
+http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz
+
+2. (For Wudan and Jiazhi). All datasets are already available in "/home/sunanda/research/Datasets"
+To use this directory easily, create a symbolic link one-level-up from the repo directory (NOT inside it) with the following command
+ln -s /home/sunanda/research/Datasets Datasets
+
+3. [Optional] - convert JPEG images into TFRecords by running "python build_image_data.py"
+

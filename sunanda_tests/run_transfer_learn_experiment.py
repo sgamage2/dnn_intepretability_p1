@@ -282,6 +282,7 @@ if __name__ == "__main__":
 
     setup_logging()
     logging.info('Started experiment')
+
     exp_params = get_exp_params()
 
     base_model, preproc_func, decode_preds_func = get_base_model(exp_params['base_model'])
