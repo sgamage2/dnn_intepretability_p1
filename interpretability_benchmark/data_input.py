@@ -25,6 +25,7 @@ import numpy as np
 import tensorflow.compat.v1 as tf
 from interpretability_benchmark.utils.preprocessing_helper import preprocess_image
 from interpretability_benchmark.utils.preprocessing_helper import rescale_input
+from interpretability_benchmark import utility
 
 # image size config by model.
 IMAGE_DIMS = [224, 224, 3]
@@ -150,6 +151,10 @@ def compute_feature_ranking(input_image,
     saliency_map = tf.add(saliency_map, epsilon)
 
     global_mean_constant = tf.constant(global_mean, shape=[1, 1, 3])
+
+    # Sunanda: This line is required to make the reshaping in the next line work
+    global_mean_constant = tf.broadcast_to(global_mean_constant, shape=[IMAGE_DIMS[0], IMAGE_DIMS[1], 3])
+
     substitute_information = tf.reshape(
         tf.multiply(global_mean_constant, 1.), [total_pixels])
 

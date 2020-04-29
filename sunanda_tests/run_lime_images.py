@@ -13,7 +13,7 @@ from skimage.segmentation import mark_boundaries
 
 data_dir = '../../Datasets/images/'
 results_dir = 'output'
-num_local_samples = 1000  # num_samples (synthetically generated) used to train local model
+num_local_samples = 1000  # no. of samples (synthetically generated) used to train local model
 num_regions = 5   # no. of regions (aka superpixels) used when extracting an explanation
 
 
