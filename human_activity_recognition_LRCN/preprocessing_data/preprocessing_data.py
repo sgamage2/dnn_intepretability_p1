@@ -6,18 +6,18 @@ from tqdm import tnrange, tqdm_notebook #used when I run in colab/GCloud
 import os
 
 parser = argparse.ArgumentParser(description='UCF101 Action Recognition preprocessing data, LRCN architecture')
-parser.add_argument('--row_data_dir', default=r'C:\Users\Doron\Desktop\ObjectRecognition data\youtube_videos', type=str,
+parser.add_argument('--row_data_dir', default=r'../Datasets/UCF-101/', type=str,
                     help='path to find the UCF101 row data')
 parser.add_argument('--ucf_list_dir',
-                    default=r'C:\Users\Doron\Desktop\ObjectRecognition\Data_UCF101\UCF101_video_list',
+                    default=r'../Datasets/ucfTrainTestlist/',
                     type=str, help='path to find the UCF101 list splitting the data to train and test')
 parser.add_argument('--sampling_rate', default=10, type=int, help='how to sample the data')
 parser.add_argument('--ucf101_fps', default=25, type=int, help='FPS of the UCF101 dataset')
 parser.add_argument('--num_frames_to_extract', default=5, type=int, help='The number of frames what would be extracted from each video')
 parser.add_argument('--video_file_name', default='y2mate.com - cute_happy_baby_crawling_BkJ6FJ2jJEQ_360p.mp4', type=str,
                     help='the video file name we would process, if none the script would run on all of the video files in the folder')
-parser.add_argument('--dataset', default='youtube', type=str,
-                    help='the dataset name. options = youtube, UCF101')
+parser.add_argument('--dataset', default='HMDB51', type=str,
+                    help='the dataset name. options = youtube, UCF101, HMDB51')
 
 
 def main_procesing_data(args, folder_dir, sampled_video_file=None, processing_mode='main'):
@@ -30,7 +30,7 @@ def main_procesing_data(args, folder_dir, sampled_video_file=None, processing_mo
                   4. if processing_mode == 'main' The Y continues frames are extracted and save to a new video if not the data in tensor tyoe mode is passed to the next function
        Output: videos in length of X frames
        """
-    if args.dataset == 'UCF101':
+    if args.dataset == 'UCF101' or args.dataset == 'HMDB51':
         for file_name in os.listdir(args.ucf_list_dir):
             # ===== reading all of the row data from the first split of train and test =====
             if '1' in file_name:
@@ -63,11 +63,10 @@ def main_procesing_data(args, folder_dir, sampled_video_file=None, processing_mo
         if processing_mode == 'live':
             return video_test, video_original_size
 
-
 if __name__ == '__main__':
     args = parser.parse_args()
     global_dir = os.path.normpath(args.row_data_dir + os.sep + os.pardir)
-    folder_name = '{}_sampled_data_video_sampling_rate_{}_num frames extracted_{}'.format(args.dataset, args.sampling_rate,
+    folder_name = '{}_sampled_data_video_sampling_rate_{}_num_frames_extracted_{}'.format(args.dataset, args.sampling_rate,
         args.num_frames_to_extract)
     folder_dir = os.path.join(global_dir, folder_name)
     create_folder_dir_if_needed(folder_dir)
