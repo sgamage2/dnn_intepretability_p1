@@ -7,7 +7,7 @@ import os
 
 parser = argparse.ArgumentParser(description='UCF101 Action Recognition preprocessing data, LRCN architecture')
 parser.add_argument('--row_data_dir', default=r'../Datasets/UCF-101/', type=str,
-                    help='path to find the UCF101 row data')
+                    help='path to find the UCF101 and HMDB51 row data')
 parser.add_argument('--ucf_list_dir',
                     default=r'../Datasets/ucfTrainTestlist/',
                     type=str, help='path to find the UCF101 list splitting the data to train and test')
@@ -16,7 +16,7 @@ parser.add_argument('--ucf101_fps', default=25, type=int, help='FPS of the UCF10
 parser.add_argument('--num_frames_to_extract', default=5, type=int, help='The number of frames what would be extracted from each video')
 parser.add_argument('--video_file_name', default='y2mate.com - cute_happy_baby_crawling_BkJ6FJ2jJEQ_360p.mp4', type=str,
                     help='the video file name we would process, if none the script would run on all of the video files in the folder')
-parser.add_argument('--dataset', default='HMDB51', type=str,
+parser.add_argument('--dataset', default='UCF101', type=str,
                     help='the dataset name. options = youtube, UCF101, HMDB51')
 
 
