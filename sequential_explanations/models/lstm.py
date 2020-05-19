@@ -3,19 +3,7 @@ from keras.layers import LSTM, Dense, Dropout, TimeDistributed
 from keras.layers.normalization import BatchNormalization
 from keras.callbacks import EarlyStopping, TensorBoard
 import logging
-
-
-class WeightRestorer(EarlyStopping):
-    def __init__(self, epochs):
-        # The EarlyStopping super class tracks val_loss and the best weights
-        # With patience=epochs+1, the early stopping will not triggered
-        super(WeightRestorer, self).__init__(monitor='val_loss', patience=epochs+1, verbose=2,
-                                             mode='auto', restore_best_weights=True)
-
-    def on_train_end(self, logs=None):
-        if self.best_weights is not None:
-            logging.info('WeightRestorer::on_train_end(): restoring best weights')
-            self.model.set_weights(self.best_weights)
+from models.keras_callbacks import WeightRestorer
 
 
 class LSTMRegressor:

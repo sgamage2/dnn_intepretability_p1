@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from matplotlib.colors import ListedColormap
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, roc_curve, auc, precision_recall_curve
+from sklearn.model_selection import train_test_split
 
 
 # A global list to keep figures (to be saved at the end of the program)
@@ -306,4 +307,25 @@ def get_experiments(filename):
     logging.info('Read {} experiments from file: {}'.format(len(experiments), filename))
 
     return experiments
+
+
+def split_dataset(X, y, split_rates, random_seed=None):
+    assert sum(split_rates) == 1
+
+    X_2 = X
+    y_2 = y
+    result_splits = []
+
+    for i, split in enumerate(split_rates[:-1]):  # Must not split at the last element
+        remain_rate_sum = sum(split_rates[i:])
+        remain_rate = 1 - (split / remain_rate_sum)
+        # print("i={}, split={}, remain_rate={}, remain_rate_sum={}".format(i, split, remain_rate, remain_rate_sum))
+
+        # Split into 2 parts, X_1 and X_2
+        X_1, X_2, y_1, y_2 = train_test_split(X_2, y_2, stratify=y_2, test_size=remain_rate, random_state=random_seed)
+        result_splits.append((X_1, y_1))
+
+    result_splits.append((X_2, y_2))    # Final remaining part
+
+    return result_splits
 

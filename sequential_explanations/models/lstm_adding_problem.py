@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
+exp_params['exp_id'] = 'lstm_adding_1'
 exp_params['num_train_seqs'] = 5000
 exp_params['num_test_seqs'] = 2500
 exp_params['seq_length'] = 12
@@ -18,7 +19,7 @@ exp_params['output_nodes'] = 1
 exp_params['lstm_layer_units'] = [10, 5]
 exp_params['lstm_layer_activations'] = ['tanh', 'tanh']
 exp_params['lstm_layer_dropout_rates'] = [0.2, 0.2]
-exp_params['lstm_epochs'] = 2
+exp_params['lstm_epochs'] = 30
 exp_params['lstm_early_stop_patience'] = -1
 exp_params['lstm_batch_size'] = 16
 
@@ -87,10 +88,10 @@ def evaluate_model(model, X, y_true, dataset_name):
 
 
 def main():
-    utility.setup_logging(exp_params['results_dir'])
+    utility.initialize(exp_params)
 
     X_train, y_train = adding_problem_generator(N=exp_params['num_train_seqs'], seq_len=exp_params['seq_length'])
-    X_val, y_val = adding_problem_generator(N=exp_params['num_train_seqs'], seq_len=exp_params['seq_length'])
+    X_val, y_val = adding_problem_generator(N=exp_params['num_test_seqs'], seq_len=exp_params['seq_length'])
     X_test, y_test = adding_problem_generator(N=exp_params['num_test_seqs'], seq_len=exp_params['seq_length'])
 
     model, history = create_and_train_lstm(X_train, y_train, X_val, y_val, exp_params)
@@ -103,6 +104,7 @@ def main():
     evaluate_model(model, X_test, y_test, "Test set")
 
     utility.save_all_figures(exp_params['results_dir'])
+
 
 if __name__ == '__main__':
     main()
