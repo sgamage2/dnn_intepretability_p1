@@ -261,6 +261,13 @@ def save_obj_to_disk(obj, filepath):
         pickle.dump(obj, file)
 
 
+def load_obj_from_disk(filepath):
+    with open(filepath, 'rb') as file:
+        obj = pickle.load(file)
+
+    return obj
+
+
 # Following helpers are for parsing input experiment parameters csv file
 
 def convert(val):

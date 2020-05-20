@@ -1,6 +1,5 @@
 import numpy as np
 import logging, time
-from sklearn.metrics import mean_squared_error
 import models.ann
 import utility
 import matplotlib.pyplot as plt
@@ -24,7 +23,8 @@ exp_params['ann_early_stop_patience'] = -1  # Disabled
 exp_params['ann_class_weights'] = 0
 
 
-# Taken from: https://minpy.readthedocs.io/en/latest/tutorial/rnn_tutorial/rnn_tutorial.html
+# Synthetic task described in A Benchmark for Interpretability Methods in Deep Neural Networks, Hooker et al
+# Can only call this once per datset (random no.s in this are generated one per dataset)
 def generate_datset(num_samples, num_features=16, num_relevant_features=4):
     a_vec = np.zeros(num_features)
     a_vec[:num_relevant_features] = np.random.normal(size=num_relevant_features)
@@ -86,11 +86,15 @@ def main():
     model, history = create_and_train_ann(X_train, y_train, X_val, y_val, exp_params)
     utility.plot_training_history(history)
 
-    model_filename = exp_params['results_dir'] + '/lstm_adding.pickle'
-    utility.save_obj_to_disk(history, model_filename)
+    model_filename = exp_params['results_dir'] + '/ann_toy_model.pickle'
+    utility.save_obj_to_disk(model, model_filename)
 
     evaluate_model(model, X_train, y_train, "Train set")
     evaluate_model(model, X_test, y_test, "Test set")
+
+    # Save test dataset (to use for predictions and feature significance)
+    np.save(exp_params['results_dir'] + '/X_test.npy', X_test)
+    np.save(exp_params['results_dir'] + '/y_test.npy', y_test)
 
     utility.save_all_figures(exp_params['results_dir'])
 

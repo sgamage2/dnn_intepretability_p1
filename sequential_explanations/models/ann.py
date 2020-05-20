@@ -51,8 +51,8 @@ class ANN:
         elif output_nodes > 1:
             output_activation = 'softmax'
 
-        self.ann.add(Dense(output_nodes, activation=output_activation,
-                           kernel_initializer='glorot_uniform', bias_initializer='zeros'))
+        self.ann.add(Dense(output_nodes, activation=None, kernel_initializer='glorot_uniform', bias_initializer='zeros'))
+        self.ann.add(Activation(activation=output_activation))
 
         self.ann.compile(optimizer='adam', loss='binary_crossentropy')
         # self.ann.compile(optimizer='adam', loss=binary_crossentropy_flood_loss)

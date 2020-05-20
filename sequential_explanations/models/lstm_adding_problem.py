@@ -19,7 +19,7 @@ exp_params['output_nodes'] = 1
 exp_params['lstm_layer_units'] = [10, 5]
 exp_params['lstm_layer_activations'] = ['tanh', 'tanh']
 exp_params['lstm_layer_dropout_rates'] = [0.2, 0.2]
-exp_params['lstm_epochs'] = 30
+exp_params['lstm_epochs'] = 25
 exp_params['lstm_early_stop_patience'] = -1
 exp_params['lstm_batch_size'] = 16
 
@@ -97,11 +97,15 @@ def main():
     model, history = create_and_train_lstm(X_train, y_train, X_val, y_val, exp_params)
     utility.plot_training_history(history)
 
-    model_filename = exp_params['results_dir'] + '/lstm_adding.pickle'
-    utility.save_obj_to_disk(history, model_filename)
+    model_filename = exp_params['results_dir'] + '/lstm_adding_model.pickle'
+    utility.save_obj_to_disk(model, model_filename)
 
     evaluate_model(model, X_train, y_train, "Train set")
     evaluate_model(model, X_test, y_test, "Test set")
+
+    # Save test dataset (to use for predictions and feature significance)
+    np.save(exp_params['results_dir'] + '/X_test.npy', X_test)
+    np.save(exp_params['results_dir'] + '/y_test.npy', y_test)
 
     utility.save_all_figures(exp_params['results_dir'])
 
