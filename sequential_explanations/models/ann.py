@@ -1,15 +1,14 @@
-from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, Activation
-from keras.layers.normalization import BatchNormalization
-from keras.callbacks import EarlyStopping, TensorBoard
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dense, Dropout, Activation, BatchNormalization
+from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 import logging
 from sklearn.utils import class_weight
 import numpy as np
 import keras
 from models.keras_callbacks import WeightRestorer
 
-from keras.losses import binary_crossentropy
-import keras.backend as K
+from tensorflow.keras.losses import binary_crossentropy
+import tensorflow.keras.backend as K
 
 
 def binary_crossentropy_flood_loss(y_true, y_pred):
