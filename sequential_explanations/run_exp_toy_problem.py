@@ -11,9 +11,9 @@ from feature_significance.gradient_saliency import get_gradient_saliency_scores
 exp_params = {}
 exp_params['results_dir'] = 'output'
 exp_params['exp_id'] = 'random_sig'
-exp_params['model_location'] = 'models/output/ann_toy_good/ann_toy_model.pickle'
-exp_params['X_data_file'] = 'models/output/ann_toy_good/X_test.npy'
-exp_params['y_data_file'] = 'models/output/ann_toy_good/y_test.npy'
+exp_params['model_location'] = 'models/output/ann_toy_May21-11_08_45/ann_toy_model.pickle'
+exp_params['X_data_file'] = 'models/output/ann_toy_May21-11_08_45/X_test.npy'
+exp_params['y_data_file'] = 'models/output/ann_toy_May21-11_08_45/y_test.npy'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 exp_params['feature_sig_estimator'] = 'random'
@@ -95,8 +95,8 @@ def main():
         X_sig_scores = get_random_feature_sig_scores(X_test)
     elif sig_estimator == 'gradient':
         X_sig_scores = get_gradient_saliency_scores(model.ann, X_test, -2)
-    elif sig_estimator == 'lrp':
-        assert False    # Not implemented yet
+    elif sig_estimator == 'shap':
+        assert False
     elif sig_estimator == 'grad_cam':
         assert False        # Not implemented yet
     else:
