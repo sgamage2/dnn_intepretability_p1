@@ -1,5 +1,5 @@
 import numpy as np
-import logging, time
+import logging, time, os
 from sklearn.metrics import mean_squared_error
 import models.lstm
 import utility
@@ -88,6 +88,8 @@ def evaluate_model(model, X, y_true, dataset_name):
 
 
 def main():
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
     utility.initialize(exp_params)
 
     X_train, y_train = adding_problem_generator(N=exp_params['num_train_seqs'], seq_len=exp_params['seq_length'])
@@ -97,8 +99,9 @@ def main():
     model, history = create_and_train_lstm(X_train, y_train, X_val, y_val, exp_params)
     utility.plot_training_history(history)
 
-    model_filename = exp_params['results_dir'] + '/lstm_adding_model.pickle'
-    utility.save_obj_to_disk(model, model_filename)
+    utility.save_model(model, exp_params['results_dir'])
+
+    # model = utility.load_model(exp_params['results_dir'])  # For testing
 
     evaluate_model(model, X_train, y_train, "Train set")
     evaluate_model(model, X_test, y_test, "Test set")

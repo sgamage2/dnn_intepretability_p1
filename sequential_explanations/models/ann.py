@@ -1,29 +1,21 @@
+import tensorflow as tf
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Dense, Dropout, Activation, BatchNormalization
 from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 import logging
 from sklearn.utils import class_weight
 import numpy as np
-import keras
 from models.keras_callbacks import WeightRestorer
-
-from tensorflow.keras.losses import binary_crossentropy
-import tensorflow.keras.backend as K
-
-
-def binary_crossentropy_flood_loss(y_true, y_pred):
-    loss = binary_crossentropy(y_true, y_pred)
-    b = 0.02
-    flood_loss = K.abs(loss - b) + b
-    return flood_loss
 
 
 class ANN:
     def __init__(self): # Minimal constructor
-        pass
+        self.params = {}
 
     def initialize(self, exp_params):
         self.params = exp_params
+        self.params['model'] = 'ann'    # As a marker
+
         self.ann = Sequential()
 
         input_nodes = exp_params['ann_input_nodes']
@@ -54,7 +46,6 @@ class ANN:
         self.ann.add(Activation(activation=output_activation))
 
         self.ann.compile(optimizer='adam', loss='binary_crossentropy')
-        # self.ann.compile(optimizer='adam', loss=binary_crossentropy_flood_loss)
 
         # Following is also valid: need to explore more. But when using binary_crossentropy loss, set metrics=[categorical_accuracy]
         # self.ann.compile(optimizer='adam', loss='binary_crossentropy', metrics=[categorical_accuracy])
@@ -73,8 +64,7 @@ class ANN:
 
     # To be used after the model has been initialized for first time
     def set_params(self, exp_params):
-        self.params['epochs'] = exp_params['epochs']
-        self.params['early_stop_patience'] = exp_params['early_stop_patience']
+        self.params.update(exp_params)
 
     def fit(self, X_train, y_train, X_valid=None, y_valid=None):
         epochs = self.params['ann_epochs']
@@ -150,8 +140,17 @@ class ANN:
         last_layer_output = last_layer_model.predict(X)
         return last_layer_output
 
-    def save(self, filename, **kwargs):
-        self.ann.save(filename, kwargs)
+    def get_tf_model(self):
+        return self.ann
+
+    def set_tf_model(self, model):
+        self.ann = model
+
+    def save(self, filename):
+        self.ann.save(filename, overwrite=True, save_format='h5')
+
+    def load_model(self, filename):
+        self.ann = tf.keras.models.load_model(filename)
 
 
 if __name__ == "__main__":

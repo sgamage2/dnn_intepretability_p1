@@ -11,16 +11,10 @@ from feature_significance.Intergrated_Grad import *
 exp_params = {}
 exp_params['results_dir'] = 'output'
 exp_params['exp_id'] = 'random_sig'
-#exp_params['model_location'] = 'models/output/ann_toy_May21-11_08_45/ann_toy_model.pickle'
-#exp_params['X_data_file'] = 'models/output/ann_toy_May21-11_08_45/X_test.npy'
-#exp_params['y_data_file'] = 'models/output/ann_toy_May21-11_08_45/y_test.npy'
-exp_params['model_location'] = 'models/output/ann_toy_May21-20_48_18/ann_toy_model.pickle'
-exp_params['X_data_file'] = 'models/output/ann_toy_May21-20_48_18/X_test.npy'
-exp_params['y_data_file'] = 'models/output/ann_toy_May21-20_48_18/y_test.npy'
+exp_params['model_location'] = 'models/output/ann_toy_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
-#exp_params['feature_sig_estimator'] = 'random'
-exp_params['feature_sig_estimator'] = 'IG'
+exp_params['feature_sig_estimator'] = 'random'
 
 def plot_feature_sig(X_sig_scores, title_suffix=''):
     num_samples = X_sig_scores.shape[0]
@@ -81,10 +75,10 @@ def main():
     # --------------------------------------
     # Load model and data. Test it works by evaluating the model on data
 
-    model = utility.load_obj_from_disk(exp_params['model_location'])
+    model = utility.load_model(exp_params['model_location'])
 
-    X_test = np.load(exp_params['X_data_file'])
-    y_test = np.load(exp_params['y_data_file'])
+    X_test = np.load(exp_params['model_location'] + '/X_test.npy')
+    y_test = np.load(exp_params['model_location'] + '/y_test.npy')
 
     ann_toy_problem.evaluate_model(model, X_test, y_test, "Test set")   # Check that model and datasets were loaded properly
 

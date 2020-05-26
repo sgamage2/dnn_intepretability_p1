@@ -336,3 +336,26 @@ def split_dataset(X, y, split_rates, random_seed=None):
 
     return result_splits
 
+
+def save_model(model_wrapper, directory):
+    model_file = os.path.join(directory, 'tf_model.h5')
+    print(model_file)
+    model_wrapper.save(model_file)
+
+    tf_model = model_wrapper.get_tf_model()
+    model_wrapper.set_tf_model(None)    # So that the wrapper can be serialized
+
+    wrapper_file = os.path.join(directory, 'model_wrapper.pickle')
+    save_obj_to_disk(model_wrapper, wrapper_file)
+
+    model_wrapper.set_tf_model(tf_model)    # So that the function has not modified model_wrapper
+
+
+def load_model(directory):
+    wrapper_file = os.path.join(directory, 'model_wrapper.pickle')
+    model_wrapper = load_obj_from_disk(wrapper_file)
+
+    model_file = os.path.join(directory, 'tf_model.h5')
+    model_wrapper.load_model(model_file)
+
+    return model_wrapper

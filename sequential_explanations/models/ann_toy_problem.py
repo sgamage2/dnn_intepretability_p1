@@ -1,5 +1,5 @@
 import numpy as np
-import logging, time
+import logging, time, os
 import models.ann
 import utility
 import matplotlib.pyplot as plt
@@ -72,6 +72,7 @@ def evaluate_model(model, X, y_true, dataset_name):
 
 
 def main():
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     utility.initialize(exp_params)
 
     total_samples = exp_params['num_train_samples'] + 2 * exp_params['num_test_samples']
@@ -86,8 +87,9 @@ def main():
     model, history = create_and_train_ann(X_train, y_train, X_val, y_val, exp_params)
     utility.plot_training_history(history)
 
-    model_filename = exp_params['results_dir'] + '/ann_toy_model.pickle'
-    utility.save_obj_to_disk(model, model_filename)
+    utility.save_model(model, exp_params['results_dir'])
+
+    # model = utility.load_model(exp_params['results_dir'])   # For testing
 
     evaluate_model(model, X_train, y_train, "Train set")
     evaluate_model(model, X_test, y_test, "Test set")

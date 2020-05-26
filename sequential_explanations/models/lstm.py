@@ -1,17 +1,20 @@
-from keras.models import Sequential
-from keras.layers import LSTM, Dense, Dropout, TimeDistributed
-from keras.layers.normalization import BatchNormalization
-from keras.callbacks import EarlyStopping, TensorBoard
+import tensorflow as tf
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout, TimeDistributed, BatchNormalization
+from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 import logging
 from models.keras_callbacks import WeightRestorer
 
 
 class LSTMRegressor:
     def __init__(self): # Minimal constructor
-        pass
+        self.params = {}
 
     def initialize(self, exp_params):
         self.params = exp_params
+        self.params['model'] = 'lstm_reg'    # As a marker
+
         self.lstm = Sequential()
 
         time_steps = exp_params['lstm_time_steps']
@@ -53,8 +56,7 @@ class LSTMRegressor:
 
     # To be used after the model has been initialized for first time
     def set_params(self, exp_params):
-        self.params['epochs'] = exp_params['epochs']
-        self.params['early_stop_patience'] = exp_params['early_stop_patience']
+        self.params.update(exp_params)
 
     def fit(self, X_train, y_train, X_valid, y_valid, X_test=None, y_test=None, parent=None):
         epochs = self.params['lstm_epochs']
@@ -107,8 +109,17 @@ class LSTMRegressor:
     def predict_classes(self, X):
         return self.lstm.predict_classes(X)
 
-    def save(self, filename, **kwargs):
-        self.lstm.save(filename, kwargs)
+    def get_tf_model(self):
+        return self.lstm
+
+    def set_tf_model(self, model):
+        self.lstm = model
+
+    def save(self, filename):
+        self.lstm.save(filename, overwrite=True, save_format='h5')
+
+    def load_model(self, filename):
+        self.lstm = tf.keras.models.load_model(filename)
 
 
 if __name__ == "__main__":
