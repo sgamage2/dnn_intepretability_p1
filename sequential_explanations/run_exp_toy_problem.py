@@ -6,18 +6,21 @@ import utility
 from models import ann_toy_problem
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
-
+from feature_significance.Intergrated_Grad import *
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
 exp_params['exp_id'] = 'random_sig'
-exp_params['model_location'] = 'models/output/ann_toy_May21-11_08_45/ann_toy_model.pickle'
-exp_params['X_data_file'] = 'models/output/ann_toy_May21-11_08_45/X_test.npy'
-exp_params['y_data_file'] = 'models/output/ann_toy_May21-11_08_45/y_test.npy'
+#exp_params['model_location'] = 'models/output/ann_toy_May21-11_08_45/ann_toy_model.pickle'
+#exp_params['X_data_file'] = 'models/output/ann_toy_May21-11_08_45/X_test.npy'
+#exp_params['y_data_file'] = 'models/output/ann_toy_May21-11_08_45/y_test.npy'
+exp_params['model_location'] = 'models/output/ann_toy_May21-20_48_18/ann_toy_model.pickle'
+exp_params['X_data_file'] = 'models/output/ann_toy_May21-20_48_18/X_test.npy'
+exp_params['y_data_file'] = 'models/output/ann_toy_May21-20_48_18/y_test.npy'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
-exp_params['feature_sig_estimator'] = 'random'
-
+#exp_params['feature_sig_estimator'] = 'random'
+exp_params['feature_sig_estimator'] = 'IG'
 
 def plot_feature_sig(X_sig_scores, title_suffix=''):
     num_samples = X_sig_scores.shape[0]
@@ -99,6 +102,18 @@ def main():
         assert False
     elif sig_estimator == 'grad_cam':
         assert False        # Not implemented yet
+    elif sig_estimator == 'IG':
+        #X_sig_scores = integrated_gradients((model.ann, X_test)
+        ig = integrated_gradients(model.ann)
+        X_sig_scores = ig.explain(X_test[0], num_steps=100) #Call explain() on the integrated_gradients instance with a sample to explain(scores)
+        X_sig_scores = X_sig_scores[:, np.newaxis].T
+        for i in range(1,2500):
+            scores2 = ig.explain(X_test[i], num_steps=100)
+            scores2 = scores2[:, np.newaxis].T
+            X_sig_scores = np.concatenate((X_sig_scores, scores2), axis=0)
+        print(X_sig_scores)
+        print(X_sig_scores.shape)
+        print(X_sig_scores.ndim)
     else:
         assert False    # Unknown feature significance method
 
