@@ -90,7 +90,7 @@ model, history = create_and_train_ann(X_train, y_train, X_val, y_val, exp_params
 utility.plot_training_history(history)
 
 model_filename = exp_params['results_dir'] + '/ann_toy_model.pickle'
-utility.save_obj_to_disk(model, model_filename)
+# utility.save_obj_to_disk(model, model_filename)
 
 evaluate_model(model, X_train, y_train, "Train set")
 evaluate_model(model, X_test, y_test, "Test set")
@@ -102,3 +102,22 @@ np.save(exp_params['results_dir'] + '/y_test.npy', y_test)
 utility.save_all_figures(exp_params['results_dir'])
 
 explainer = shap.DeepExplainer(model.ann, data=X_train)
+
+shap_values = explainer.shap_values(X_test)
+shap_values = shap_values[0]
+print(pd.DataFrame(shap_values).head())
+
+# explaining individual predictions
+print('Expected Value:', explainer.expected_value[0])
+shap.summary_plot(shap_values, X_test, plot_type="bar")
+shap.summary_plot(shap_values, X_test)
+
+feature_names = pd.DataFrame(X_train).columns[0:].values
+# '1' in explainer.expected_value[1]: we consider the feature effects of P(Y=1)
+# shap_values[1][i]: extract the shape value of the ith sample that correponds to P(Y=1)
+# X_train[i]: the ith sample in training set
+
+# i = 1
+# shap_values = explainer.shap_values(X_train)
+# shap.force_plot(base_value=explainer.expected_value[0], shap_values=shap_values[0][1],
+#                features=X_train[i], feature_names=list(feature_names))

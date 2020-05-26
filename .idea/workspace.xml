@@ -57,7 +57,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.shapley">
+  <component name="RunManager" selected="Python.run_exp_toy_problem">
     <configuration name="ann_toy_problem" type="PythonConfigurationType" factoryName="Python">
       <module name="dnn_intepretability_p1" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -148,9 +148,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.run_exp_toy_problem" />
         <item itemvalue="Python.shapley" />
         <item itemvalue="Python.shap" />
-        <item itemvalue="Python.run_exp_toy_problem" />
       </list>
     </recent_temporary>
   </component>
@@ -168,7 +168,7 @@
       <workItem from="1590008692912" duration="4697000" />
       <workItem from="1590069686930" duration="1304000" />
       <workItem from="1590072483751" duration="11984000" />
-      <workItem from="1590345085253" duration="10806000" />
+      <workItem from="1590345085253" duration="13438000" />
     </task>
     <servers />
   </component>
@@ -191,7 +191,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/dnn_intepretability_p1$ann_toy_problem.coverage" NAME="ann_toy_problem Coverage Results" MODIFIED="1590073721044" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sequential_explanations/models" />
     <SUITE FILE_PATH="coverage/dnn_intepretability_p1$shap.coverage" NAME="shap Coverage Results" MODIFIED="1590352369371" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sequential_explanations/feature_significance" />
-    <SUITE FILE_PATH="coverage/dnn_intepretability_p1$run_exp_toy_problem.coverage" NAME="run_exp_toy_problem Coverage Results" MODIFIED="1590074001990" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sequential_explanations" />
-    <SUITE FILE_PATH="coverage/dnn_intepretability_p1$shapley.coverage" NAME="shapley Coverage Results" MODIFIED="1590432424600" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sequential_explanations/feature_significance" />
+    <SUITE FILE_PATH="coverage/dnn_intepretability_p1$run_exp_toy_problem.coverage" NAME="run_exp_toy_problem Coverage Results" MODIFIED="1590435831372" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sequential_explanations" />
+    <SUITE FILE_PATH="coverage/dnn_intepretability_p1$shapley.coverage" NAME="shapley Coverage Results" MODIFIED="1590434696942" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sequential_explanations/feature_significance" />
   </component>
 </project>
