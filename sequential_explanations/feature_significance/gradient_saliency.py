@@ -1,6 +1,8 @@
 # import saliency
-from keras import backend as K
 import tensorflow as tf
+import matplotlib.pyplot as plt
+import numpy as np
+from tensorflow.keras import backend as K
 
 
 def get_gradient_saliency_scores(model, X, output_layer_idx):
@@ -14,27 +16,19 @@ def get_gradient_saliency_scores(model, X, output_layer_idx):
     :return: gradient_saliency: gradient saliency score of every feature of every example in X (array of the same shape as X)
     """
 
-    assert False    # Not implemented yet
+    temp_output_layer = model.layers[output_layer_idx]
+    temp_model = tf.keras.models.Model(inputs=model.input, outputs=temp_output_layer.output)
 
-    output_tensor = model.layers[output_layer_idx].output
-    # input_tensor = model.input
-    input_tensor = X[0]
+    X_ts = tf.convert_to_tensor(X)
 
-    # model.compile(optimizer='adam', loss='binary_crossentropy')
+    with tf.GradientTape() as tape:
+        tape.watch(X_ts)
+        pred_y = temp_model(X_ts)
 
-    tf.summary.trace_on(graph=True, profiler=True)
+    grad = tape.gradient(pred_y, X_ts)
+    grad_inputs = grad.numpy()
 
-    gradients = K.gradients(output_tensor, input_tensor)
-
-    print(gradients)
-
-    # import tensorflow.compat.v1 as tfc
-    # sess = K.get_session()
-    # gradients = K.gradients(output_tensor, input_tensor)
-    # # sess = tfc.InteractiveSession()
-    # sess.run(tfc.initialize_all_variables())
-    # evaluated_gradients = sess.run(gradients, feed_dict={model.input: X[0]})
-    # print(evaluated_gradients)
+    return grad_inputs
 
 
 if __name__ == '__main__':

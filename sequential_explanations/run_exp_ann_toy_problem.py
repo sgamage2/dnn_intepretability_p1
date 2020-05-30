@@ -16,7 +16,7 @@ exp_params['exp_id'] = 'random_sig'
 exp_params['model_location'] = 'models/output/ann_toy_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
-exp_params['feature_sig_estimator'] = 'shap'
+exp_params['feature_sig_estimator'] = 'gradient'
 
 
 def plot_feature_sig(X_sig_scores, title_suffix=''):
