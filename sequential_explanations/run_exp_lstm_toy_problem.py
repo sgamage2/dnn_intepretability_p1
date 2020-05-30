@@ -17,7 +17,7 @@ exp_params['model_location'] = 'models/output/lstm_adding_good'
 exp_params['feature_sig_estimator'] = 'random'
 
 
-def plot_feature_sig(X_sig_scores, title_suffix=''):
+def plot_feature_sig(X_sig_scores, X, title_suffix=''):
     num_samples = X_sig_scores.shape[0]
     num_timesteps = X_sig_scores.shape[1]
     num_features = X_sig_scores.shape[2]
@@ -33,15 +33,23 @@ def plot_feature_sig(X_sig_scores, title_suffix=''):
     step = (width * 2 + gap)
     end = step * num_timesteps - gap
     mid_points = np.arange(0, end, step)  # label locations
-    labels = [str(t) for t in range(1, num_timesteps+1)]
+    labels = [str(t) for t in range(0, num_timesteps)]
 
     for j in range(num_samples):
         ax = plt.subplot(n, n, j + 1)
         feat1_sample_sig_scores = X_sig_scores[j][:, 0]
         feat2_sample_sig_scores = X_sig_scores[j][:, 1]
+        markers = X[j][:, 1]
+        marker_1s = np.where(markers == 1.0)[0]
 
         plt.bar(mid_points - width/2, feat1_sample_sig_scores, width=width, label='Feature-1')
         plt.bar(mid_points + width/2, feat2_sample_sig_scores, width=width, label='Feature-2')
+
+        print(markers)
+        for t in marker_1s:
+            print(t)
+            x = mid_points[t]
+            plt.annotate('', xy=(x, 0), xytext=(x, 0.5), arrowprops=dict(facecolor='black', shrink=0.005))
 
         ax.set_xticks(mid_points)
         ax.set_xticklabels(labels)
@@ -52,11 +60,12 @@ def plot_feature_sig(X_sig_scores, title_suffix=''):
     plt.legend()
 
 
-def plot_feature_sig_rand_samples(X_sig_scores, num_samples):
+def plot_feature_sig_rand_samples(X_sig_scores, X, num_samples):
     rand_idx = np.random.choice(X_sig_scores.shape[0], num_samples, replace=False)
     X_rand_sig_scores = X_sig_scores[rand_idx, :]
+    X = X[rand_idx, :]
     title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
-    plot_feature_sig(X_rand_sig_scores, title_suffix)
+    plot_feature_sig(X_rand_sig_scores, X, title_suffix)
 
 
 def plot_feature_sig_average(X_sig_scores, y):
@@ -140,7 +149,7 @@ def main():
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
     n = 4
-    plot_feature_sig_rand_samples(X_sig_scores, num_samples=n)
+    plot_feature_sig_rand_samples(X_sig_scores, X_test, num_samples=n)
 
     # Plot the average feature significance scores (average across samples) of each class
     plot_feature_sig_average(X_sig_scores, y_test)
