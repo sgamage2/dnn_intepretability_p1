@@ -18,7 +18,7 @@ exp_params['ann_layer_units'] = [10, 5]
 exp_params['ann_layer_activations'] = ['relu', 'relu']
 exp_params['ann_layer_dropout_rates'] = [0.2, 0.2]
 exp_params['ann_batch_size'] = 32
-exp_params['ann_epochs'] = 25
+exp_params['ann_epochs'] = 20
 exp_params['ann_early_stop_patience'] = -1  # Disabled
 exp_params['ann_class_weights'] = 0
 
@@ -45,6 +45,12 @@ def generate_datset(num_samples, num_features=16, num_relevant_features=4):
     X = a_vec * z / 10 + d_vec * eta + eps / 10
     assert X.shape == (num_samples, num_features)
     assert y.shape == (num_samples,)
+
+    # Occlude
+    # X[:,0] = 0
+    # X[:,1] = 0
+    # # X[:,2] = 0
+    # # X[:,3] = 0
 
     return X, y
 
