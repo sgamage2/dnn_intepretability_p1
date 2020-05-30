@@ -14,7 +14,7 @@ exp_params['exp_id'] = 'random_sig'
 exp_params['model_location'] = 'models/output/lstm_adding_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
-exp_params['feature_sig_estimator'] = 'random'
+exp_params['feature_sig_estimator'] = 'gradient'
 
 
 def plot_feature_sig(X_sig_scores, X, title_suffix=''):
@@ -45,11 +45,12 @@ def plot_feature_sig(X_sig_scores, X, title_suffix=''):
         plt.bar(mid_points - width/2, feat1_sample_sig_scores, width=width, label='Feature-1')
         plt.bar(mid_points + width/2, feat2_sample_sig_scores, width=width, label='Feature-2')
 
-        print(markers)
+        # print(markers)
         for t in marker_1s:
             print(t)
+            max_score = max(feat1_sample_sig_scores[t], feat2_sample_sig_scores[t])
             x = mid_points[t]
-            plt.annotate('', xy=(x, 0), xytext=(x, 0.5), arrowprops=dict(facecolor='black', shrink=0.005))
+            plt.annotate('', xy=(x, 0), xytext=(x, max_score/4), arrowprops=dict(facecolor='black', width=0.25, shrink=0.005))
 
         ax.set_xticks(mid_points)
         ax.set_xticklabels(labels)
@@ -125,7 +126,7 @@ def main():
     if sig_estimator == 'random':
         X_sig_scores = get_random_feature_sig_scores_lstm(X_test)
     elif sig_estimator == 'gradient':
-        X_sig_scores = get_gradient_saliency_scores(model.ann, X_test, -2)
+        X_sig_scores = get_gradient_saliency_scores(model.lstm, X_test, -1)
     elif sig_estimator == 'shap':
         assert False
     elif sig_estimator == 'grad_cam':

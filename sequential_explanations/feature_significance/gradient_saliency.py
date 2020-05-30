@@ -27,6 +27,7 @@ def get_gradient_saliency_scores(model, X, output_layer_idx):
 
     grad = tape.gradient(pred_y, X_ts)
     grad_inputs = grad.numpy()
+    grad_inputs = grad_inputs ** 2
 
     return grad_inputs
 
