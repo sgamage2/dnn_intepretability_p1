@@ -7,6 +7,8 @@ from models import ann_toy_problem
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.Intergrated_Grad import *
+import shap
+
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
@@ -15,6 +17,7 @@ exp_params['model_location'] = 'models/output/ann_toy_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 exp_params['feature_sig_estimator'] = 'random'
+
 
 def plot_feature_sig(X_sig_scores, title_suffix=''):
     num_samples = X_sig_scores.shape[0]
@@ -25,12 +28,14 @@ def plot_feature_sig(X_sig_scores, title_suffix=''):
     fig.suptitle('Feature signficance scores: {}'.format(title_suffix))
     utility.add_figure_to_save(fig, 'feature_sig_' + title_suffix)
 
-    labels = [str(num) for num in range(1, num_features+1)]
+    x = np.arange(0, num_features)
 
     for j in range(num_samples):
-        plt.subplot(n, n, j + 1)
+        ax = plt.subplot(n, n, j + 1)
         sample_sig_scores = X_sig_scores[j]
-        plt.bar(labels, sample_sig_scores, width=0.5)
+        plt.bar(x, sample_sig_scores, width=0.5)
+        ax.set_xticks(x)
+        ax.set_xticklabels(x)
         plt.xlabel('Feature no.')
         plt.ylabel('Significance score')
 
@@ -43,27 +48,83 @@ def plot_feature_sig_rand_samples(X_sig_scores, y, num_samples, class_label):
     plot_feature_sig(X_rand_sig_scores, title_suffix)
 
 
+def plot_feature_sig_distribution(X_sig_scores, X, y):
+    # title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
+    # fig.suptitle('Feature signficance distribution: '.format(title_suffix))
+    # utility.add_figure_to_save(fig, 'feature_sig_dist_' + title_suffix)
+    #
+    # shap.summary_plot(X_sig_scores, X, show=False)
+
+    X_avg_sig_scores_class_0 = X_sig_scores[y == 0]
+    X_avg_sig_scores_class_1 = X_sig_scores[y == 1]
+    X_class_0 = X[y == 0]
+    X_class_1 = X[y == 1]
+
+    fig = plt.figure(figsize=(2, 1))
+    title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
+    fig.suptitle('Feature signficance distribution: {}'.format(title_suffix))
+    utility.add_figure_to_save(fig, 'feature_sig_dist_' + title_suffix)
+
+    plt.subplot(1, 2, 1)
+    plt.gca().set_title('class=0')
+    shap.summary_plot(X_avg_sig_scores_class_0, X_class_0, show=False, sort=False, plot_size=(10,10))
+
+    plt.subplot(1, 2, 2)
+    plt.gca().set_title('class=1')
+    shap.summary_plot(X_avg_sig_scores_class_1, X_class_1, show=False, sort=False, plot_size=(10,10))
+
+
 def plot_feature_sig_average(X_sig_scores, y):
+    # title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
+    # fig.suptitle('Feature signficance distribution: '.format(title_suffix))
+    # utility.add_figure_to_save(fig, 'feature_sig_dist_' + title_suffix)
+    #
+    # shap.summary_plot(X_sig_scores, X, show=False)
+
+    X_avg_sig_scores_class_0 = X_sig_scores[y == 0]
+    X_avg_sig_scores_class_1 = X_sig_scores[y == 1]
+    # X_class_0 = X[y == 0]
+    # X_class_1 = X[y == 1]
+
+    fig = plt.figure(figsize=(2, 1))
+    title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
+    fig.suptitle('Average(|feature significance|): {}'.format(title_suffix))
+    utility.add_figure_to_save(fig, 'feature_sig_dist_' + title_suffix)
+
+    plt.subplot(1, 2, 1)
+    plt.gca().set_title('class=0')
+    shap.summary_plot(X_avg_sig_scores_class_0, plot_type='bar', show=False, sort=False, plot_size=(10,10))
+
+    plt.subplot(1, 2, 2)
+    plt.gca().set_title('class=1')
+    shap.summary_plot(X_avg_sig_scores_class_1, plot_type='bar', show=False, sort=False, plot_size=(10,10))
+
+
+def plot_feature_sig_average_depricated(X_sig_scores, y):
     X_avg_sig_scores_class_0 = np.mean(X_sig_scores[y == 0], axis=0)
     X_avg_sig_scores_class_1 = np.mean(X_sig_scores[y == 1], axis=0)
     title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
 
     fig = plt.figure(figsize=(20, 10))
-    fig.suptitle('Average feature signficance scores: {}'.format(title_suffix))
+    fig.suptitle('Average feature significance (signed): {}'.format(title_suffix))
     utility.add_figure_to_save(fig, 'avg_feature_sig_' + title_suffix)
 
     num_features = X_sig_scores.shape[1]
-    labels = [str(num) for num in range(1, num_features + 1)]
+    x = np.arange(0, num_features)
 
-    plt.subplot(1, 2, 1)
-    plt.bar(labels, X_avg_sig_scores_class_0, width=0.5)
-    plt.gca().set_title('class=0')
+    ax = plt.subplot(1, 2, 1)
+    plt.bar(x, X_avg_sig_scores_class_0, width=0.5)
+    ax.set_title('class=0')
+    ax.set_xticks(x)
+    ax.set_xticklabels(x)
     plt.xlabel('Feature no.')
     plt.ylabel('Significance score')
 
-    plt.subplot(1, 2, 2)
-    plt.bar(labels, X_avg_sig_scores_class_1, width=0.5)
-    plt.gca().set_title('class=1')
+    ax = plt.subplot(1, 2, 2)
+    plt.bar(x, X_avg_sig_scores_class_1, width=0.5)
+    ax.set_title('class=1')
+    ax.set_xticks(x)
+    ax.set_xticklabels(x)
     plt.xlabel('Feature no.')
     plt.ylabel('Significance score')
 
@@ -118,8 +179,12 @@ def main():
     plot_feature_sig_rand_samples(X_sig_scores, y_test, num_samples=n, class_label=0)
     plot_feature_sig_rand_samples(X_sig_scores, y_test, num_samples=n, class_label=1)
 
+    # Plot the distribution of significance scores
+    plot_feature_sig_distribution(X_sig_scores, X_test, y_test)
+
     # Plot the average feature significance scores (average across samples) of each class
     plot_feature_sig_average(X_sig_scores, y_test)
+    plot_feature_sig_average_depricated(X_sig_scores, y_test)
 
 
     # --------------------------------------
