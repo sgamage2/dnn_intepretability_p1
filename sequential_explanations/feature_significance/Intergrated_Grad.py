@@ -4,7 +4,7 @@ from time import sleep
 import sys
 import keras.backend as K
 
-from keras.models import Model, Sequential
+from tensorflow.keras.models import Model, Sequential
 
 '''
 Integrated gradients approximates Shapley values by integrating partial
@@ -24,7 +24,7 @@ class integrated_gradients:
 
         # load model supports keras.Model and keras.Sequential
         if isinstance(model, Sequential):
-            self.model = model.model
+            self.model = model
         elif isinstance(model, Model):
             self.model = model
         else:

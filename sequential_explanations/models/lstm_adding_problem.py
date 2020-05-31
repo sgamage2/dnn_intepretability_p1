@@ -107,6 +107,8 @@ def main():
     evaluate_model(model, X_test, y_test, "Test set")
 
     # Save test dataset (to use for predictions and feature significance)
+    np.save(exp_params['results_dir'] + '/X_train.npy', X_train)
+    np.save(exp_params['results_dir'] + '/y_train.npy', y_train)
     np.save(exp_params['results_dir'] + '/X_test.npy', X_test)
     np.save(exp_params['results_dir'] + '/y_test.npy', y_test)
 
