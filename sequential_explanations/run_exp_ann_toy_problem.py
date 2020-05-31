@@ -9,8 +9,12 @@ from models import ann_toy_problem
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
 
+
 from feature_significance.Intergrated_Grad import *
 from feature_significance.LIME import get_lime_feature_sig_scores
+
+from feature_significance.shapley import get_shapley_feature_sig_scores
+from feature_significance.Intergrated_Grad import integrated_gradients
 
 from feature_significance.shapley import get_shapley_feature_sig_scores
 from feature_significance.Intergrated_Grad import integrated_gradients
@@ -23,9 +27,11 @@ exp_params['model_location'] = 'models/output/ann_toy_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 
+
 #exp_params['feature_sig_estimator'] = 'random'
 #exp_params['feature_sig_estimator'] = 'IG'
 #exp_params['feature_sig_estimator'] = 'lime'
+
 
 exp_params['feature_sig_estimator'] = 'gradient'
 
