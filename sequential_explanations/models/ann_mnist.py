@@ -8,7 +8,7 @@ import tensorflow as tf
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
-exp_params['exp_id'] = 'ann_toy'
+exp_params['exp_id'] = 'ann_mnist'
 exp_params['img_width'] = 28
 exp_params['num_classes'] = 10
 
