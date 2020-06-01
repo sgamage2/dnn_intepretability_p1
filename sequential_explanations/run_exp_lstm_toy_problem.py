@@ -12,7 +12,7 @@ import pandas as pd
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
-exp_params['exp_id'] = 'random_sig'
+exp_params['exp_id'] = 'lstm_adding'
 exp_params['model_location'] = 'models/output/lstm_adding_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.

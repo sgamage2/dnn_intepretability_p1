@@ -15,7 +15,7 @@ from feature_significance.shapley import get_shapley_feature_sig_scores
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
-exp_params['exp_id'] = 'random_sig'
+exp_params['exp_id'] = 'ann_toy'
 exp_params['model_location'] = 'models/output/ann_toy_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.

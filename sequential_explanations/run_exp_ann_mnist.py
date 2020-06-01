@@ -1,5 +1,5 @@
 import numpy as np
-import os, math
+import os, math, logging
 import matplotlib.pyplot as plt
 import shap
 import utility
@@ -8,17 +8,19 @@ from models import ann_mnist
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.shapley import get_shapley_feature_sig_scores
-from feature_significance.Intergrated_Grad import integrated_gradients
+from feature_significance.Intergrated_Grad import get_ig_sig_scores
+from feature_significance.LIME import get_lime_feature_sig_scores
+
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
-exp_params['exp_id'] = 'random_sig'
+exp_params['exp_id'] = 'ann_mnist'
 exp_params['model_location'] = 'models/output/ann_mnist_good'
 exp_params['img_width'] = 28
 exp_params['num_classes'] = 10
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, IG, etc.
-exp_params['feature_sig_estimator'] = 'random'
+exp_params['feature_sig_estimator'] = 'shap'
 
 
 def plot_feature_sig(ax, x_sig_scores, x, digit):
@@ -155,11 +157,18 @@ def main():
     y_train = y_train.argmax(axis=1)  # Integer labels
     y_test = y_test.argmax(axis=1)  # Integer labels
 
+    # Reduce test set size for fast score computation
+    X_train = X_test[:len(X_train) // 120]
+    y_train = X_test[:len(y_train) // 120]
+    X_test = X_test[:len(X_test) // 12]
+    y_test = y_test[:len(y_test) // 12]
+
     # --------------------------------------
     # Get feature significance scores
     
     sig_estimator = exp_params['feature_sig_estimator']
-    
+    logging.info('Running feature significance estimator: {}'.format(sig_estimator))
+
     if sig_estimator == 'random':
         X_sig_scores = get_random_feature_sig_scores(X_test)
     elif sig_estimator == 'gradient':
@@ -167,23 +176,18 @@ def main():
     elif sig_estimator == 'shap':
         X_sig_scores = get_shapley_feature_sig_scores(model.ann, X_train, X_test)
     elif sig_estimator == 'grad_cam':
-        assert False        # Not implemented yet
+        assert False  # Not implemented yet
     elif sig_estimator == 'IG':
-        #X_sig_scores = integrated_gradients((model.ann, X_test)
-        ig = integrated_gradients(model.ann)
-        X_sig_scores = ig.explain(X_test[0], num_steps=100) #Call explain() on the integrated_gradients instance with a sample to explain(scores)
-        X_sig_scores = X_sig_scores[:, np.newaxis].T
-        for i in range(1,2500):
-            scores2 = ig.explain(X_test[i], num_steps=100)
-            scores2 = scores2[:, np.newaxis].T
-            X_sig_scores = np.concatenate((X_sig_scores, scores2), axis=0)
-        print(X_sig_scores)
-        print(X_sig_scores.shape)
-        print(X_sig_scores.ndim)
+        X_sig_scores = get_ig_sig_scores(model.ann, X_test)
+    elif sig_estimator == 'lime':
+        X_test = X_test[0:10]
+        y_test = y_test[0:10]
+        X_sig_scores = get_lime_feature_sig_scores(model.ann, X_train, X_test, y_train, verbose=True)
     else:
-        assert False    # Unknown feature significance method
+        assert False  # Unknown feature significance method
     
-    
+    logging.info('Plotting feature significance values')
+
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
     plot_feature_sig_rand_samples(X_sig_scores, X_test, y_test)
@@ -198,8 +202,7 @@ def main():
     # --------------------------------------
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
-    
-    
+
     utility.save_all_figures(exp_params['results_dir'])
     plt.show()
 
