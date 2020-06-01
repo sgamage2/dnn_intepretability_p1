@@ -30,10 +30,8 @@ exp_params['model_location'] = 'models/output/ann_toy_good'
 
 #exp_params['feature_sig_estimator'] = 'random'
 #exp_params['feature_sig_estimator'] = 'IG'
-#exp_params['feature_sig_estimator'] = 'lime'
-
-
-exp_params['feature_sig_estimator'] = 'gradient'
+exp_params['feature_sig_estimator'] = 'lime'
+# exp_params['feature_sig_estimator'] = 'gradient'
 
 
 def plot_feature_sig(X_sig_scores, title_suffix=''):
@@ -59,7 +57,7 @@ def plot_feature_sig(X_sig_scores, title_suffix=''):
 
 def plot_feature_sig_rand_samples(X_sig_scores, y, num_samples, class_label):
     X_sig_scores = X_sig_scores[y == class_label]
-    rand_idx = np.random.choice(X_sig_scores.shape[0], num_samples, replace=False)
+    rand_idx = np.random.choice(X_sig_scores.shape[0], num_samples, replace=True)
     X_rand_sig_scores = X_sig_scores[rand_idx, :]
     title_suffix = 'estimator=' + exp_params['feature_sig_estimator'] + ' - class = ' + str(class_label)
     plot_feature_sig(X_rand_sig_scores, title_suffix)
@@ -189,17 +187,15 @@ def main():
             scores2 = scores2[:, np.newaxis].T
             X_sig_scores = np.concatenate((X_sig_scores, scores2), axis=0)
     elif sig_estimator == 'lime':
+        X_test = X_test[0:10]
         y_test = y_test[0:10]
-        X_sig_scores = get_lime_feature_sig_scores(model.ann, X_train, X_test, feature_names)
+        X_sig_scores = get_lime_feature_sig_scores(model.ann, X_train, X_test, y_train)
     else:
         assert False    # Unknown feature significance method
 
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
-    if sig_estimator == 'lime':
-        n = 2
-    else:
-        n = 4
+    n = 4
     plot_feature_sig_rand_samples(X_sig_scores, y_test, num_samples=n, class_label=0)
     plot_feature_sig_rand_samples(X_sig_scores, y_test, num_samples=n, class_label=1)
 
@@ -213,7 +209,6 @@ def main():
     # --------------------------------------
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
-    
     
     utility.save_all_figures(exp_params['results_dir'])
     plt.show()
