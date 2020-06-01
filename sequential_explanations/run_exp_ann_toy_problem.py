@@ -11,6 +11,7 @@ from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.Intergrated_Grad import get_ig_sig_scores
 from feature_significance.LIME import get_lime_feature_sig_scores
 from feature_significance.shapley import get_shapley_feature_sig_scores
+from feature_significance.occlusion import get_occlusion_scores
 
 
 exp_params = {}
@@ -21,11 +22,12 @@ exp_params['model_location'] = 'models/output/ann_toy_good'
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 
 
-#exp_params['feature_sig_estimator'] = 'random'
 
-exp_params['feature_sig_estimator'] = 'IG'
+# exp_params['feature_sig_estimator'] = 'random'
+# exp_params['feature_sig_estimator'] = 'IG'
 # exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
+exp_params['feature_sig_estimator'] = 'occlusion'
 
 
 def plot_feature_sig(X_sig_scores, title_suffix=''):
@@ -166,6 +168,8 @@ def main():
         X_sig_scores = get_random_feature_sig_scores(X_test)
     elif sig_estimator == 'gradient':
         X_sig_scores = get_gradient_saliency_scores(model.ann, X_test, -2)
+    elif sig_estimator == 'occlusion':
+        X_sig_scores = get_occlusion_scores(model.ann, X_test, output_layer_idx=-1, mask_size=1, stride=1, fill_value=0)
     elif sig_estimator == 'shap':
         X_sig_scores = get_shapley_feature_sig_scores(model.ann, X_train, X_test)
     elif sig_estimator == 'grad_cam':

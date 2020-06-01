@@ -87,36 +87,62 @@ def evaluate_model(model, X, y_true, dataset_name):
     return mse
 
 
-def main():
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-    utility.initialize(exp_params)
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-    X_train, y_train = adding_problem_generator(N=exp_params['num_train_seqs'], seq_len=exp_params['seq_length'])
-    X_val, y_val = adding_problem_generator(N=exp_params['num_test_seqs'], seq_len=exp_params['seq_length'])
-    X_test, y_test = adding_problem_generator(N=exp_params['num_test_seqs'], seq_len=exp_params['seq_length'])
+utility.initialize(exp_params)
 
-    model, history = create_and_train_lstm(X_train, y_train, X_val, y_val, exp_params)
-    utility.plot_training_history(history)
+X_train, y_train = adding_problem_generator(N=exp_params['num_train_seqs'], seq_len=exp_params['seq_length'])
+X_val, y_val = adding_problem_generator(N=exp_params['num_test_seqs'], seq_len=exp_params['seq_length'])
+X_test, y_test = adding_problem_generator(N=exp_params['num_test_seqs'], seq_len=exp_params['seq_length'])
 
-    utility.save_model(model, exp_params['results_dir'])
+model, history = create_and_train_lstm(X_train, y_train, X_val, y_val, exp_params)
+utility.plot_training_history(history)
 
-    # model = utility.load_model(exp_params['results_dir'])  # For testing
+utility.save_model(model, exp_params['results_dir'])
 
-    evaluate_model(model, X_train, y_train, "Train set")
-    evaluate_model(model, X_test, y_test, "Test set")
+# model = utility.load_model(exp_params['results_dir'])  # For testing
 
-    # Save test dataset (to use for predictions and feature significance)
-    np.save(exp_params['results_dir'] + '/X_train.npy', X_train)
-    np.save(exp_params['results_dir'] + '/y_train.npy', y_train)
-    np.save(exp_params['results_dir'] + '/X_test.npy', X_test)
-    np.save(exp_params['results_dir'] + '/y_test.npy', y_test)
-    np.save(exp_params['results_dir'] + '/X_train.npy', X_train)
-    np.save(exp_params['results_dir'] + '/y_train.npy', y_train)
+evaluate_model(model, X_train, y_train, "Train set")
+evaluate_model(model, X_test, y_test, "Test set")
 
-    utility.save_all_figures(exp_params['results_dir'])
+# Save test dataset (to use for predictions and feature significance)
+np.save(exp_params['results_dir'] + '/X_test.npy', X_test)
+np.save(exp_params['results_dir'] + '/y_test.npy', y_test)
+np.save(exp_params['results_dir'] + '/X_train.npy', X_train)
+np.save(exp_params['results_dir'] + '/y_train.npy', y_train)
+
+utility.save_all_figures(exp_params['results_dir'])
 
 
-if __name__ == '__main__':
-    main()
+import shap
 
+
+
+e = shap.DeepExplainer(model.lstm, X_train)
+# e = shap.DeepExplainer((model.lstm.layers[0].input, model.lstm.layers[-1].output),X_train)
+
+
+
+"""
+shap_val = e.shap_values(X_test)
+shap_val = np.array(shap_val)
+
+shap_val = np.reshape(shap_val,(int(shap_val.shape[1]),int(shap_val.shape[2]),int(shap_val.shape[3])))
+shap_abs = np.absolute(shap_val)
+sum_0 = np.sum(shap_abs,axis=0)
+f_names = [‘RSI_14D’,’STOK’,’STOD’,’ROC’,’Momentum’,’CCI’,’ADX’,’MACD’,’Money_Flow_Index’,’WillR’,’INRchange’]
+x_pos = [i for i, _ in enumerate(f_names)]
+plt1 = plt.subplot(311)
+plt1.barh(x_pos,sum_0[1])
+plt1.set_yticks(x_pos)
+plt1.set_yticklabels(f_names)
+plt1.set_title(“Yesterday’s features (time-step 2)”)
+plt2 = plt.subplot(312,sharex=plt1)
+plt2.barh(x_pos,sum_0[0])
+plt2.set_yticks(x_pos)
+plt2.set_yticklabels(f_names)
+plt2.set_title(“The day before yesterday’s features(time-step 1)”)
+plt.tight_layout()
+plt.show()
+"""
