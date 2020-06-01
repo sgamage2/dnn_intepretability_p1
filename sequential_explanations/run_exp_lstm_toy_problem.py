@@ -8,6 +8,7 @@ from feature_significance.random_feature_sig import get_random_feature_sig_score
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.LIME import get_lime_feature_sig_scores_lstm
 from feature_significance.Intergrated_Grad import get_ig_sig_scores
+from feature_significance.occlusion import get_occlusion_scores_lstm
 
 from feature_significance.shapley import get_shapley_feature_sig_scores
 
@@ -21,8 +22,9 @@ exp_params['model_location'] = 'models/output/lstm_adding_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 
-exp_params['feature_sig_estimator'] = 'IG'
-#exp_params['feature_sig_estimator'] = 'random'
+# exp_params['feature_sig_estimator'] = 'IG'
+# exp_params['feature_sig_estimator'] = 'random'
+exp_params['feature_sig_estimator'] = 'occlusion'
 # exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
 
@@ -143,8 +145,10 @@ def main():
         X_sig_scores = get_random_feature_sig_scores_lstm(X_test)
     elif sig_estimator == 'gradient':
         X_sig_scores = get_gradient_saliency_scores(model.lstm, X_test, -1)
+    elif sig_estimator == 'occlusion':
+        X_sig_scores = get_occlusion_scores_lstm(model.lstm, X_test, output_layer_idx=-1, mask_full_timestep=True, fill_value=0)
     elif sig_estimator == 'shap':
-#       X_sig_scores = get_shapley_feature_sig_scores(model.lstm, X_train, X_test)
+        # X_sig_scores = get_shapley_feature_sig_scores(model.lstm, X_train, X_test)
         assert False
     elif sig_estimator == 'grad_cam':
         assert False        # Not implemented yet
