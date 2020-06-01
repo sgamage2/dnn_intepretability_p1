@@ -4,17 +4,19 @@ import lime
 import lime.lime_tabular
 
 
-def get_lime_feature_sig_scores(model, X_train, X_test, y_train):
+def get_lime_feature_sig_scores(model, X_train, X_test, y_train, verbose=False):
     #If the feature is numerical, compute the mean and std, and discretize it into quartiles.
     explainer = lime.lime_tabular.LimeTabularExplainer(X_train, mode='classification', training_labels=y_train,
-                                                       class_names=[0, 1], discretize_continuous=True)
+                                                       class_names=[0, 1], discretize_continuous=True, verbose=verbose)
 
     num_samples = X_test.shape[0]
     num_features = X_train.shape[1]
-
     X_sig_scores = np.zeros(shape=(num_samples, num_features))
 
     for j in range(num_samples):
+        if verbose:
+            print('Running LIME on sample {}/{}'.format(j, num_samples))
+
         exp = explainer.explain_instance(X_test[0], model.predict, num_features=num_features, labels=(0,))
         scores = exp.as_map()[0]    # A list of score tuples: (feature_num, score)
 
@@ -64,7 +66,7 @@ def get_lime_feature_sig_scores_lstm(model, X_train, X_test, y_train, feature_na
         X_sig_scores[j] = arranged_scores
 
     # print(X_sig_scores)
-    print(X_sig_scores.shape)
-    print(X_sig_scores.ndim)
+    # print(X_sig_scores.shape)
+    # print(X_sig_scores.ndim)
 
     return X_sig_scores

@@ -1,5 +1,5 @@
 import numpy as np
-import os, math
+import os, math, logging
 import matplotlib.pyplot as plt
 import shap
 import utility
@@ -154,13 +154,11 @@ def main():
     
     model = utility.load_model(exp_params['model_location'])
 
-    
     X_test = np.load(exp_params['model_location'] + '/X_test.npy')
     y_test = np.load(exp_params['model_location'] + '/y_test.npy')
     X_train = np.load(exp_params['model_location'] + '/X_train.npy')
     y_train = np.load(exp_params['model_location'] + '/y_train.npy')
     
-
     ann_toy_problem.evaluate_model(model, X_test, y_test, "Test set")   # Check that model and datasets were loaded properly
     
     
@@ -168,7 +166,8 @@ def main():
     # Get feature significance scores
     
     sig_estimator = exp_params['feature_sig_estimator']
-    
+    logging.info('Running feature significance estimator: {}'.format(sig_estimator))
+
     if sig_estimator == 'random':
         X_sig_scores = get_random_feature_sig_scores(X_test)
     elif sig_estimator == 'gradient':
@@ -192,6 +191,8 @@ def main():
         X_sig_scores = get_lime_feature_sig_scores(model.ann, X_train, X_test, y_train)
     else:
         assert False    # Unknown feature significance method
+
+    logging.info('Plotting feature significance values')
 
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)

@@ -1,5 +1,5 @@
 import numpy as np
-import os, math
+import os, math, logging
 import matplotlib.pyplot as plt
 
 import utility
@@ -53,7 +53,7 @@ def plot_feature_sig(X_sig_scores, X, title_suffix=''):
 
         # print(markers)
         for t in marker_1s:
-            print(t)
+            # print(t)
             max_score = max(feat1_sample_sig_scores[t], feat2_sample_sig_scores[t])
             x = mid_points[t]
             plt.annotate('', xy=(x, 0), xytext=(x, max_score/4), arrowprops=dict(facecolor='black', width=0.25, shrink=0.005))
@@ -131,10 +131,10 @@ def main():
 
     sig_estimator = exp_params['feature_sig_estimator']
 
+    logging.info('Running feature significance estimator: {}'.format(sig_estimator))
+
     if sig_estimator == 'random':
         X_sig_scores = get_random_feature_sig_scores_lstm(X_test)
-        print(X_sig_scores)
-        print(X_sig_scores.shape)
     elif sig_estimator == 'gradient':
         X_sig_scores = get_gradient_saliency_scores(model.lstm, X_test, -1)
     elif sig_estimator == 'shap':
@@ -161,6 +161,8 @@ def main():
     else:
         assert False    # Unknown feature significance method
 
+
+    logging.info('Plotting feature significance values')
 
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
