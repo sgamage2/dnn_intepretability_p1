@@ -19,8 +19,8 @@ exp_params['model_location'] = 'models/output/lstm_adding_good'
 
 #exp_params['feature_sig_estimator'] = 'IG'
 #exp_params['feature_sig_estimator'] = 'random'
-#exp_params['feature_sig_estimator'] = 'lime'
-exp_params['feature_sig_estimator'] = 'gradient'
+exp_params['feature_sig_estimator'] = 'lime'
+# exp_params['feature_sig_estimator'] = 'gradient'
 
 
 def plot_feature_sig(X_sig_scores, X, title_suffix=''):
@@ -48,8 +48,8 @@ def plot_feature_sig(X_sig_scores, X, title_suffix=''):
         markers = X[j][:, 1]
         marker_1s = np.where(markers == 1.0)[0]
 
-        plt.bar(mid_points - width/2, feat1_sample_sig_scores, width=width, label='Feature-1')
-        plt.bar(mid_points + width/2, feat2_sample_sig_scores, width=width, label='Feature-2')
+        plt.bar(mid_points - width/2, feat1_sample_sig_scores, width=width, label='Random No.')
+        plt.bar(mid_points + width/2, feat2_sample_sig_scores, width=width, label='Marker')
 
         # print(markers)
         for t in marker_1s:
@@ -122,12 +122,6 @@ def main():
     X_test = np.load(exp_params['model_location'] + '/X_test.npy')
     y_test = np.load(exp_params['model_location'] + '/y_test.npy')
 
-
-    B = np.reshape(X_train, (-1, 12))
-    feature_names = pd.DataFrame(B).columns[0:].values
-    #print(feature_names)
-
-
     lstm_adding_problem.evaluate_model(model, X_train, y_train, "Train set")
     lstm_adding_problem.evaluate_model(model, X_test, y_test, "Test set")   # Check that model and datasets were loaded properly
 
@@ -160,6 +154,8 @@ def main():
         print(X_sig_scores.shape)
         print(X_sig_scores.ndim)
     elif sig_estimator == 'lime':
+        feature_names = ['randnum', 'mask']
+        X_test = X_test[0:10]
         y_test = y_test[0:10]
         X_sig_scores = get_lime_feature_sig_scores_lstm(model.lstm, X_train, X_test, y_train, feature_names)
     else:
