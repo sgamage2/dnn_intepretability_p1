@@ -1,5 +1,5 @@
 import numpy as np
-import os, math
+import os, math, logging
 import matplotlib.pyplot as plt
 
 import utility
@@ -19,8 +19,10 @@ exp_params['model_location'] = 'models/output/lstm_adding_good'
 
 #exp_params['feature_sig_estimator'] = 'IG'
 #exp_params['feature_sig_estimator'] = 'random'
-#exp_params['feature_sig_estimator'] = 'lime'
-exp_params['feature_sig_estimator'] = 'gradient'
+exp_params['feature_sig_estimator'] = 'lime'
+
+# exp_params['feature_sig_estimator'] = 'gradient'
+
 
 
 def plot_feature_sig(X_sig_scores, X, title_suffix=''):
@@ -48,12 +50,12 @@ def plot_feature_sig(X_sig_scores, X, title_suffix=''):
         markers = X[j][:, 1]
         marker_1s = np.where(markers == 1.0)[0]
 
-        plt.bar(mid_points - width/2, feat1_sample_sig_scores, width=width, label='Feature-1')
-        plt.bar(mid_points + width/2, feat2_sample_sig_scores, width=width, label='Feature-2')
+        plt.bar(mid_points - width/2, feat1_sample_sig_scores, width=width, label='Random No.')
+        plt.bar(mid_points + width/2, feat2_sample_sig_scores, width=width, label='Marker')
 
         # print(markers)
         for t in marker_1s:
-            print(t)
+            # print(t)
             max_score = max(feat1_sample_sig_scores[t], feat2_sample_sig_scores[t])
             x = mid_points[t]
             plt.annotate('', xy=(x, 0), xytext=(x, max_score/4), arrowprops=dict(facecolor='black', width=0.25, shrink=0.005))
@@ -122,12 +124,6 @@ def main():
     X_test = np.load(exp_params['model_location'] + '/X_test.npy')
     y_test = np.load(exp_params['model_location'] + '/y_test.npy')
 
-
-    B = np.reshape(X_train, (-1, 12))
-    feature_names = pd.DataFrame(B).columns[0:].values
-    #print(feature_names)
-
-
     lstm_adding_problem.evaluate_model(model, X_train, y_train, "Train set")
     lstm_adding_problem.evaluate_model(model, X_test, y_test, "Test set")   # Check that model and datasets were loaded properly
 
@@ -137,10 +133,10 @@ def main():
 
     sig_estimator = exp_params['feature_sig_estimator']
 
+    logging.info('Running feature significance estimator: {}'.format(sig_estimator))
+
     if sig_estimator == 'random':
         X_sig_scores = get_random_feature_sig_scores_lstm(X_test)
-        print(X_sig_scores)
-        print(X_sig_scores.shape)
     elif sig_estimator == 'gradient':
         X_sig_scores = get_gradient_saliency_scores(model.lstm, X_test, -1)
     elif sig_estimator == 'shap':
@@ -152,6 +148,7 @@ def main():
         ig = integrated_gradients(model.lstm)
         X_sig_scores = ig.explain(X_test[0], num_steps=1000) #Call explain() on the integrated_gradients instance with a sample to explain(scores)
         X_sig_scores = X_sig_scores[np.newaxis, :]
+
         for i in range(1,2500):
             scores2 = ig.explain(X_test[i], num_steps=1000)
             scores2 = scores2[np.newaxis, :]
@@ -160,11 +157,15 @@ def main():
         print(X_sig_scores.shape)
         print(X_sig_scores.ndim)
     elif sig_estimator == 'lime':
+        feature_names = ['randnum', 'mask']
+        X_test = X_test[0:10]
         y_test = y_test[0:10]
         X_sig_scores = get_lime_feature_sig_scores_lstm(model.lstm, X_train, X_test, y_train, feature_names)
     else:
         assert False    # Unknown feature significance method
 
+
+    logging.info('Plotting feature significance values')
 
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
