@@ -14,6 +14,18 @@ for deep neuron networks".
 '''
 
 
+def get_ig_sig_scores(model, X):
+    X_sig_scores = np.zeros(X.shape)
+
+    ig = integrated_gradients(model)
+
+    for i in range(X.shape[0]):
+        scores = ig.explain(X[i], num_steps=1000)
+        X_sig_scores[i] = scores
+
+    return X_sig_scores
+
+
 class integrated_gradients:
     # model: Keras model that you wish to explain.
     # outchannels: In case the model are multi tasking, you can specify which output you want explain .
