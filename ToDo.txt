@@ -1,0 +1,11 @@
+Sunanda
+---------
+
+4. Fix a random seed to get rid of randomness
+    4.1. Check that ANN toy problem dataset is properly generated (that 1st 4 features are infact significant)
+
+5. Implement 2 sig. methods: gradients, occlusion
+
+6. Implement 2 metrics: sanity checks, pixel flipping
+
+7. MNIST ANN toy problem (just to verify)

@@ -4,7 +4,7 @@ from time import sleep
 import sys
 import keras.backend as K
 
-from keras.models import Model, Sequential
+from tensorflow.keras.models import Model, Sequential
 
 '''
 Integrated gradients approximates Shapley values by integrating partial
@@ -12,6 +12,18 @@ gradients with respect to input features from reference input to the
 actual input. The following class implements the paper "Axiomatic attribution
 for deep neuron networks".
 '''
+
+
+def get_ig_sig_scores(model, X):
+    X_sig_scores = np.zeros(X.shape)
+
+    ig = integrated_gradients(model)
+
+    for i in range(X.shape[0]):
+        scores = ig.explain(X[i], num_steps=1000)
+        X_sig_scores[i] = scores
+
+    return X_sig_scores
 
 
 class integrated_gradients:
@@ -24,7 +36,7 @@ class integrated_gradients:
 
         # load model supports keras.Model and keras.Sequential
         if isinstance(model, Sequential):
-            self.model = model.model
+            self.model = model
         elif isinstance(model, Model):
             self.model = model
         else:

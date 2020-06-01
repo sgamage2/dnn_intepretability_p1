@@ -17,8 +17,10 @@ def get_shapley_feature_sig_scores(model,X_train,X_test):
 
     # explaining individual predictions
     print('Expected Value:', explainer.expected_value[0])
-    shap.summary_plot(shap_values, X_test, plot_type="bar")
-    shap.summary_plot(shap_values, X_test)
+
+    # These 2 plots will be plotted by the caller
+    # shap.summary_plot(shap_values, X_test, plot_type="bar")
+    # shap.summary_plot(shap_values, X_test)
 
     feature_names = pd.DataFrame(X_train).columns[0:].values
     return shap_values
