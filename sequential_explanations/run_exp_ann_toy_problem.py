@@ -8,16 +8,9 @@ from models import ann_toy_problem
 
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
-
-
-from feature_significance.Intergrated_Grad import *
+from feature_significance.Intergrated_Grad import get_ig_sig_scores
 from feature_significance.LIME import get_lime_feature_sig_scores
-
 from feature_significance.shapley import get_shapley_feature_sig_scores
-from feature_significance.Intergrated_Grad import integrated_gradients
-
-from feature_significance.shapley import get_shapley_feature_sig_scores
-from feature_significance.Intergrated_Grad import integrated_gradients
 
 
 exp_params = {}
@@ -29,8 +22,8 @@ exp_params['model_location'] = 'models/output/ann_toy_good'
 
 
 #exp_params['feature_sig_estimator'] = 'random'
-#exp_params['feature_sig_estimator'] = 'IG'
-exp_params['feature_sig_estimator'] = 'lime'
+exp_params['feature_sig_estimator'] = 'IG'
+# exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
 
 
@@ -177,14 +170,7 @@ def main():
     elif sig_estimator == 'grad_cam':
         assert False  # Not implemented yet
     elif sig_estimator == 'IG':
-        #X_sig_scores = integrated_gradients((model.ann, X_test)
-        ig = integrated_gradients(model.ann)
-        X_sig_scores = ig.explain(X_test[0], num_steps=1000) #Call explain() on the integrated_gradients instance with a sample to explain(scores)
-        X_sig_scores = X_sig_scores[:, np.newaxis].T
-        for i in range(1,2500):
-            scores2 = ig.explain(X_test[i], num_steps=1000)
-            scores2 = scores2[:, np.newaxis].T
-            X_sig_scores = np.concatenate((X_sig_scores, scores2), axis=0)
+        X_sig_scores = get_ig_sig_scores(model.ann, X_test)
     elif sig_estimator == 'lime':
         X_test = X_test[0:10]
         y_test = y_test[0:10]

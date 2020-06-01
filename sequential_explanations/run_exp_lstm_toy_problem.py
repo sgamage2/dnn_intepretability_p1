@@ -17,9 +17,9 @@ exp_params['model_location'] = 'models/output/lstm_adding_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 
-#exp_params['feature_sig_estimator'] = 'IG'
+exp_params['feature_sig_estimator'] = 'IG'
 #exp_params['feature_sig_estimator'] = 'random'
-exp_params['feature_sig_estimator'] = 'lime'
+# exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
 
 
@@ -142,17 +142,7 @@ def main():
     elif sig_estimator == 'grad_cam':
         assert False        # Not implemented yet
     elif sig_estimator == 'IG':
-        #X_sig_scores = integrated_gradients((model.ann, X_test)
-        ig = integrated_gradients(model.lstm)
-        X_sig_scores = ig.explain(X_test[0], num_steps=1000) #Call explain() on the integrated_gradients instance with a sample to explain(scores)
-        X_sig_scores = X_sig_scores[np.newaxis, :]
-        for i in range(1,2500):
-            scores2 = ig.explain(X_test[i], num_steps=1000)
-            scores2 = scores2[np.newaxis, :]
-            X_sig_scores = np.concatenate((X_sig_scores, scores2), axis=0)
-        print(X_sig_scores)
-        print(X_sig_scores.shape)
-        print(X_sig_scores.ndim)
+        X_sig_scores = get_ig_sig_scores(model.lstm, X_test)
     elif sig_estimator == 'lime':
         feature_names = ['randnum', 'mask']
         X_test = X_test[0:10]
