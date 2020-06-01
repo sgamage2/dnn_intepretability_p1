@@ -7,6 +7,7 @@ from models import lstm_adding_problem
 from feature_significance.random_feature_sig import get_random_feature_sig_scores_lstm
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.Intergrated_Grad import *
+from feature_significance.shapley import *
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
@@ -104,6 +105,8 @@ def main():
 
     X_test = np.load(exp_params['model_location'] + '/X_test.npy')
     y_test = np.load(exp_params['model_location'] + '/y_test.npy')
+    X_train = np.load(exp_params['model_location'] + '/X_train.npy')
+    y_train = np.load(exp_params['model_location'] + '/y_train.npy')
 
     lstm_adding_problem.evaluate_model(model, X_test, y_test, "Test set")   # Check that model and datasets were loaded properly
 
@@ -118,6 +121,7 @@ def main():
     elif sig_estimator == 'gradient':
         X_sig_scores = get_gradient_saliency_scores(model.ann, X_test, -2)
     elif sig_estimator == 'shap':
+#       X_sig_scores = get_shapley_feature_sig_scores(model.lstm, X_train, X_test)
         assert False
     elif sig_estimator == 'grad_cam':
         assert False        # Not implemented yet
