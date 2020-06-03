@@ -9,3 +9,8 @@ Sunanda
 6. Implement 2 metrics: sanity checks, pixel flipping
 
 7. MNIST ANN toy problem (just to verify)
+
+-----
+
+python -m LRCN.test --sampled_data_dir ../../Datasets/UCF101_sampled_data_video_sampling_rate_10_num_frames_extracted_5/ --ucf_list_dir ../../Datasets/ucfTrainTestlist/ --model_dir ../human_activity_recognition_LRCN/20200510-193055/Saved_model_checkpoints --model_name epoch_95.pth.tar
+
