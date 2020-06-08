@@ -21,8 +21,8 @@ exp_params['img_width'] = 28
 exp_params['num_classes'] = 10
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, IG, etc.
-exp_params['feature_sig_estimator'] = 'occlusion'
-
+#exp_params['feature_sig_estimator'] = 'occlusion'
+exp_params['feature_sig_estimator'] = 'IG'
 
 def plot_feature_sig(ax, x_sig_scores, x, digit):
     xmin = np.min(x_sig_scores)
@@ -179,6 +179,7 @@ def main():
     X_test = X_test[:len(X_test) // 12]
     y_test = y_test[:len(y_test) // 12]
 
+
     # --------------------------------------
     # Get feature significance scores
     
@@ -209,6 +210,8 @@ def main():
         assert False  # Not implemented yet
     elif sig_estimator == 'IG':
         X_sig_scores = get_ig_sig_scores(model.ann, X_test)
+        print(X_sig_scores)
+        print(X_sig_scores.shape)
     elif sig_estimator == 'lime':
         X_test, y_test = get_distributed_sample(X_test, y_test, 12)
         X_sig_scores = get_lime_feature_sig_scores(model.ann, X_train, X_test, y_train, verbose=True)

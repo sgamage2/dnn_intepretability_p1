@@ -226,7 +226,7 @@ def load_all_dataset_to_RAM_test(dataloader, batch_size):
     images_test, labels_test = [], []
     with tqdm(total=len(dataloader)) as pbar:
         # with tqdm_notebook(total=len(dataloader)) as pbar:
-        for local_images, local_label in dataloader:
+        for local_images, local_label, indexs in dataloader:
             images_test += [local_images]
             labels_test += [local_label]
             pbar.update(1)

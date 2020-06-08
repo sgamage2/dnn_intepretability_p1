@@ -20,30 +20,59 @@ def main():
     args = parser.parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     folder_dir = set_project_folder_dir(args.open_new_folder, args.model_dir, use_model_folder_dir=True, mode='test')
+
     print('The setting of the run are:\n{}\n' .format(args))
     print('The training would take place on {}\n'.format(device))
     print('The project directory is {}' .format(folder_dir))
+
     save_setting_info(args, device, folder_dir)
     test_videos_names, labels, label_decoder_dict = load_test_data(args.model_dir)
+
     dataset = UCF101Dataset(args.sampled_data_dir, [test_videos_names, labels], mode='test')
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+
+
     # ======= if args.load_all_data_to_RAM True load dataset directly to the RAM (for faster computation) ======
     if args.load_all_data_to_RAM:
         dataloader = load_all_dataset_to_RAM_test(dataloader, args.batch_size)
     plot_label_distribution(dataloader, folder_dir, args.load_all_data_to_RAM, label_decoder_dict, mode='test')
-    print('Data prepared\nLoading model...')
+
+    print('Data prepared')
+    print('Loading model...')
+    print('\tCreating Pytorch ConvLSTM model object')
     num_class = len(label_decoder_dict) if args.number_of_classes is None else args.number_of_classes
     model = ConvLstm(args.latent_dim, args.hidden_size, args.lstm_layers, args.bidirectional, num_class)
     model = model.to(device)
+
+
     # ====== setting optimizer and criterion parameters ======
+    print('\tLoading checkpoint')
     criterion = nn.CrossEntropyLoss()
-    checkpoint = torch.load(os.path.join(args.model_dir, args.model_name))
+    checkpoint = torch.load(os.path.join(args.model_dir, args.model_name))  # For CPU onlu devices, add the argument: map_location=device
+
+    print('\tLoading model state dictionary')
     model.load_state_dict(checkpoint['model_state_dict'])
+
+    # # Check data shapes
+    # i = 0
+    # for local_images, local_labels, indexs in dataloader:
+    #     print('local_images.shape = {}'.format(local_images.shape))
+    #     print('local_labels.shape = {}'.format(local_labels.shape))
+    #     print('indexs.shape = {}'.format(indexs.shape))
+    #     i += 1
+    #     if i == 2:
+    #         break
+
+
     # ====== inference_mode ======
+    print('Running inference on test dataset')
     test_loss, test_acc, predicted_labels, images, true_labels, index = test_model(model, dataloader, device, criterion,
                                                                             mode='save_prediction_label_list')
     print('test loss {:.8f}, test_acc {:.3f}'.format(test_loss, test_acc))
     save_loss_info_into_a_file(0, test_loss, 0, test_acc, folder_dir, 'test')
+
+    print('Running inference complete')
+
     # ====== analyze the test results ======
     plot_images_with_predicted_labels(images, label_decoder_dict, predicted_labels[-1], folder_dir, 'test')
     save_path_plots = os.path.join(folder_dir, 'Plots')
