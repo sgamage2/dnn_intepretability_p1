@@ -5,8 +5,6 @@
 
 # Challenge: model has both CNN and LSTM parts. We will likely not be able to simply call the feature sig methods (will need custom versions of current functions)
 
-# ToDo for Sunanda: help with plotting feature sig heatmaps on input video frames (check plot functions in run_exp_ann_mnist.py
-
 import numpy as np
 import os, math, logging
 import matplotlib.pyplot as plt
@@ -67,18 +65,23 @@ def main():
     dataset = ann_mnist.get_mnist_dataset()
     (X_train, y_train), (X_val, y_val), (X_test, y_test) = dataset
 
-    model = utility.load_model(exp_params['model_location'])
+    # XXXXXXXXXXX:  [ToDo Sunanda] Load models.lrcn here
 
-    ann_mnist.evaluate_model(model, X_test, y_test, "Test set")  # Check that model and datasets were loaded properly
+    # XXXXXXXXXXX: [ToDo Jiazhi] Load 3 random videos (img sequences) = X_test
+    # Possible steps (see the for loop in extract_features.py)
+    # Get 3 random rows from data.data
+    # Call frames = data.get_frames_for_sample(video) --> frames = data.rescale_list(frames, 40)
+    # Create a list of these frame seqs without calling model.predict(x) --> shape of a single frame seq will be (40, 299, 299)
+    # Make that a numpy array --> So for 3 videos, the array X_test will have shape (3, 40, 299, 299)
 
-    y_train = y_train.argmax(axis=1)  # Integer labels
-    y_test = y_test.argmax(axis=1)  # Integer labels
+    # XXXXXXXXXXX: [ToDo Jiazhi] Plot the above 3 videos
+    # Create a plot_video(video) function where the input video is an img seq of shape (40, 299, 299)
 
-    # Reduce test set size for fast score computation
-    X_train = X_test[:len(X_train) // 120]
-    y_train = X_test[:len(y_train) // 120]
-    X_test = X_test[:len(X_test) // 12]
-    y_test = y_test[:len(y_test) // 12]
+    # XXXXXXXXXXX: [ToDo Jiazhi] Cretae a new version of random_feature_sig_scores_video(X_test)
+    # returns X_sig_scores with the same shape as X_test --> (3, 40, 299, 299)
+
+    # XXXXXXXXXXX: [ToDo Jiazhi] Plot those feature sig values as a heatmap on top of the video plots
+
 
     # --------------------------------------
     # Get feature significance scores
