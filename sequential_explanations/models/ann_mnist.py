@@ -30,6 +30,7 @@ def get_mnist_dataset():
     X_train = train_images.reshape(train_images.shape[0], -1)
     X_test = test_images.reshape(test_images.shape[0], -1)
 
+
     # Scale to [0, 1]
     X_train = X_train / 255.0
     X_test = X_test / 255.0
