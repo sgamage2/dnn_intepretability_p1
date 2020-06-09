@@ -8,9 +8,8 @@
 import numpy as np
 import os, math, logging
 import matplotlib.pyplot as plt
-import shap
 import utility
-from models import ann_mnist
+from video_utility.data import DataSet
 
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
@@ -20,50 +19,63 @@ from feature_significance.LIME import get_lime_feature_sig_scores
 from feature_significance.occlusion import get_occlusion_scores
 
 exp_params = {}
+exp_params['data_base_path'] = '/home/jiazhi/videoucftest/data'
+exp_params['sequences_path'] = '/home/jiazhi/videoucftest/data/sequences111'
 exp_params['results_dir'] = 'output'
 exp_params['exp_id'] = 'lrcn_ucf_video_classification'
 exp_params['model_location'] = 'models/output/lrcn_video_good'
+exp_params['image_shape'] = (224, 224, 3)
+exp_params['lstm_layer_units'] = [256, 256]
+exp_params['lstm_time_steps'] = 40   # No. of frames to classify at one time (LSTM unrolling)
+exp_params['output_nodes'] = 70  # No. of classes
 
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, IG, etc.
 #exp_params['feature_sig_estimator'] = 'occlusion'
-exp_params['feature_sig_estimator'] = 'IG'
+exp_params['feature_sig_estimator'] = 'random'
 
-def plot_feature_sig_rand_samples(X_sig_scores, X, y):
+
+
+def plot_feature_sig_rand_samples(X_sig_scores, X):
     title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
-
-    w = exp_params['img_width']
-    X_sig_scores = X_sig_scores.reshape(-1, w, w)
-    X = X.reshape(-1, w, w)
 
     fig = plt.figure(figsize=(10, 5))
     utility.add_figure_to_save(fig, 'feature_sig_' + title_suffix)
-    axes = fig.subplots(3, 4)
+    axes = fig.subplots(5, 8)
     axes = axes.flatten()
-
-    for i in range(11): # 11 plots
-        digit = i % exp_params['num_classes']   # 10 digits
-        X_sig_scores_digit = X_sig_scores[y == digit]
-        X_digit = X[y == digit]
-        rand_idx = np.random.randint(0, X_sig_scores_digit.shape[0])
-        X_sig_scores_digit = X_sig_scores_digit[rand_idx]
-        X_digit = X_digit[rand_idx]
-
-        im, hm = plot_feature_sig(axes[i], X_sig_scores_digit, X_digit, i)
-
-    fig.colorbar(hm, cax=axes[11], aspect=10)
+    for i in range(3):
+        X = X[i]
+        X_sig_scores = X_sig_scores[i]
+        for j in range(0, X.shape[0]):
+            axes[j].imshow(X[j])
+            axes[j].imshow(X_sig_scores[j])
+        plt.show()
+    #fig.colorbar(hm, cax=axes[X.shape[0]], aspect=40)
+    return -1
 
 
 
 def main():
     utility.initialize(exp_params)
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # This line disables GPU
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # This line disables GPU
 
     # --------------------------------------
     # Load model and data. Test it works by evaluating the model on data
 
-    dataset = ann_mnist.get_mnist_dataset()
-    (X_train, y_train), (X_val, y_val), (X_test, y_test) = dataset
+    dataset = DataSet(seq_length=exp_params['lstm_time_steps'],
+                      class_limit=exp_params['output_nodes'],
+                      image_shape=exp_params['image_shape'],
+                      base_path=exp_params['data_base_path'],
+                      sequences_path=exp_params['sequences_path'])
+
+
+    X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=8)
+
+    logging.info('X_test.shape = {}, y_test.shape = {}'.format(X_test.shape, y_test.shape))
+    # X_test has shape: (num_samples, seq_length, width, height, channels=3)
+
+    model = utility.load_model(exp_params['model_location'])
+
 
     # XXXXXXXXXXX:  [ToDo Sunanda] Load models.lrcn here
 
@@ -122,11 +134,17 @@ def main():
     else:
         assert False  # Unknown feature significance method
 
+    logging.info('X_sig_scores.shape = {}'.format(X_sig_scores.shape))
+
     logging.info('Plotting feature significance values')
 
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
-    plot_feature_sig_rand_samples(X_sig_scores, X_test, y_test)
+
+    #plot_video(X_test[0])
+    plot_feature_sig_rand_samples(X_sig_scores, X_test)
+    # plot_feature_sig_rand_samples(X_sig_scores, X_test, y_test)
+
 
     # Plot the distribution of significance scores
     # plot_feature_sig_distribution(X_sig_scores, X_test, y_test)
