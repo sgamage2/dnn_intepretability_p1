@@ -68,7 +68,9 @@ def main():
                       base_path=exp_params['data_base_path'],
                       sequences_path=exp_params['sequences_path'])
 
-    X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=3)
+
+    X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=8)
+
     logging.info('X_test.shape = {}, y_test.shape = {}'.format(X_test.shape, y_test.shape))
     # X_test has shape: (num_samples, seq_length, width, height, channels=3)
 
@@ -138,8 +140,11 @@ def main():
 
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
+
     #plot_video(X_test[0])
     plot_feature_sig_rand_samples(X_sig_scores, X_test)
+    # plot_feature_sig_rand_samples(X_sig_scores, X_test, y_test)
+
 
     # Plot the distribution of significance scores
     # plot_feature_sig_distribution(X_sig_scores, X_test, y_test)
