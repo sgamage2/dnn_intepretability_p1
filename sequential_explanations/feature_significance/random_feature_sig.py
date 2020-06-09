@@ -14,20 +14,10 @@ def get_random_feature_sig_scores(X):
 
     # Generate random sig for every example separately to ensure the random normal distribution applies to each example
     for i in range(random_sig.shape[0]):
-        random_sig[i] = np.random.normal(size=random_sig.shape[1])
+        random_sig[i] = np.random.normal(size=random_sig.shape[1:])
 
     return random_sig
 
-
-def get_random_feature_sig_scores_lstm(X):
-
-    random_sig = np.zeros(shape=X.shape)
-
-    # Generate random sig for every example separately to ensure the random normal distribution applies to each example
-    for i in range(random_sig.shape[0]):
-        random_sig[i] = np.random.normal(size=(random_sig.shape[1], random_sig.shape[2]))
-
-    return random_sig
 
 if __name__ == '__main__':
     assert False    # Not meant to be run as a standalone script

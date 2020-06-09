@@ -85,6 +85,7 @@ def main():
 
     X_video_test, y_video_test = dataset.get_frames_for_sample_set('test', num_samples=8)
     logging.info('X_test.shape = {}, y_test.shape = {}'.format(X_video_test.shape, y_video_test.shape))
+    # X_test has shape: (num_samples, seq_length, width, height, channels=3)
 
     evaluate_model(model, X_video_test, y_video_test, "Test set")
 
