@@ -110,7 +110,6 @@ def plot_feature_sig_average_abs(X_sig_scores, y):
     plt.gca().set_title('class=1')
     shap.summary_plot(X_avg_sig_scores_class_1, plot_type='bar', show=False, sort=False, plot_size=(10,10))
 
-
 def plot_feature_sig_average_signed(X_sig_scores, y):
     X_avg_sig_scores_class_0 = np.mean(X_sig_scores[y == 0], axis=0)
     X_avg_sig_scores_class_1 = np.mean(X_sig_scores[y == 1], axis=0)

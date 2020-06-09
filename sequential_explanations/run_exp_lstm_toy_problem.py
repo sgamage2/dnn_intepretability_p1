@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 import utility
 from models import lstm_adding_problem
-from feature_significance.random_feature_sig import get_random_feature_sig_scores_lstm
+from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.LIME import get_lime_feature_sig_scores_lstm
 from feature_significance.Intergrated_Grad import get_ig_sig_scores
@@ -23,8 +23,8 @@ exp_params['model_location'] = 'models/output/lstm_adding_good'
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 
 # exp_params['feature_sig_estimator'] = 'IG'
-# exp_params['feature_sig_estimator'] = 'random'
-exp_params['feature_sig_estimator'] = 'occlusion'
+exp_params['feature_sig_estimator'] = 'random'
+# exp_params['feature_sig_estimator'] = 'occlusion'
 # exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
 
@@ -143,7 +143,7 @@ def main():
     logging.info('Running feature significance estimator: {}'.format(sig_estimator))
 
     if sig_estimator == 'random':
-        X_sig_scores = get_random_feature_sig_scores_lstm(X_test)
+        X_sig_scores = get_random_feature_sig_scores(X_test)
     elif sig_estimator == 'gradient':
         X_sig_scores = get_gradient_saliency_scores(model.lstm, X_test, -1)
     elif sig_estimator == 'occlusion':
