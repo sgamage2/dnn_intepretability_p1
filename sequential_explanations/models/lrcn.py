@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import LSTM, Dense, Dropout, TimeDistributed, BatchNormalization, Bidirectional, Reshape, Input
+from tensorflow.keras.layers import LSTM, Dense, Dropout, TimeDistributed, BatchNormalization, Bidirectional, Reshape, Input, Activation
 from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 import logging
 from models.keras_callbacks import WeightRestorer
@@ -73,7 +73,8 @@ class LRCNClassifier:
             lstm.add(Bidirectional(LSTM(units=layer_nodes[i], return_sequences=ret_seq)))
             lstm.add(Dropout(dropouts[i]))
 
-        lstm.add(Dense(num_classes, activation='softmax'))
+        lstm.add(Dense(num_classes, activation=None))
+        lstm.add(Activation(activation='softmax'))
 
         lstm.compile(optimizer='adam', loss='categorical_crossentropy',
                      metrics=['accuracy','top_k_categorical_accuracy'])
@@ -134,7 +135,7 @@ class LRCNClassifier:
 
         return history
 
-    def predict_lrcn(self, X_video_frames):
+    def predict(self, X_video_frames):
         return self.lrcn_model.predict(X_video_frames)
         # return self.cnn.predict(X_video_frames)
 

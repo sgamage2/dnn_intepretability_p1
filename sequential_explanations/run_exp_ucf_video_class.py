@@ -33,10 +33,14 @@ exp_params['output_nodes'] = 70  # No. of classes
 
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, IG, etc.
-#exp_params['feature_sig_estimator'] = 'occlusion'
-#exp_params['feature_sig_estimator'] = 'random'
+
+
 exp_params['feature_sig_estimator'] = 'IG'
 #exp_params['feature_sig_estimator'] = 'gradient'
+# exp_params['feature_sig_estimator'] = 'random'
+# exp_params['feature_sig_estimator'] = 'gradient'
+#exp_params['feature_sig_estimator'] = 'occlusion'
+
 
 
 def plot_feature_sig_rand_samples(X_sig_scores, X):
@@ -60,7 +64,8 @@ def plot_feature_sig_rand_samples(X_sig_scores, X):
 
 def main():
     utility.initialize(exp_params)
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # This line disables GPU
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # This line disables GPU (disable for gradient saliency)
+
 
     # --------------------------------------
     # Load model and data. Test it works by evaluating the model on data
@@ -107,7 +112,7 @@ def main():
     if sig_estimator == 'random':
         X_sig_scores = get_random_feature_sig_scores(X_test)
     elif sig_estimator == 'gradient':
-        X_sig_scores = get_gradient_saliency_scores(model.ann, X_test, -2)
+        X_sig_scores = get_gradient_saliency_scores(model.lrcn_model, X_test, -2)
     elif sig_estimator == 'occlusion':
         X_digit_sig_scores_list = []
         X_digit_list = []
@@ -115,7 +120,7 @@ def main():
         for digit in range(exp_params['num_classes']):  # Get scores for each class separately
             X_digit = X_test[y_test == digit]
             y_digit = np.full((X_digit.shape[0],), digit)
-            X_digit_sig_scores = get_occlusion_scores(model.ann, X_digit, output_layer_idx=-1, output_node=digit,
+            X_digit_sig_scores = get_occlusion_scores(model.lrcn_model, X_digit, output_layer_idx=-1, output_node=digit,
                                                       mask_size=20, stride=4, fill_value=0)
             X_digit_sig_scores_list.append(X_digit_sig_scores)
             X_digit_list.append(X_digit)

@@ -39,7 +39,7 @@ def create_and_train_lrcn(X_train, y_train, X_test, y_test, params):
 def evaluate_model(model, X, y_true, dataset_name):
     logging.info('{}: Predicting and evaluating model'.format(dataset_name))
 
-    y_pred = model.predict_lrcn(X)
+    y_pred = model.predict(X)
 
     # Integer labels
     y_pred = y_pred.argmax(axis=1)
