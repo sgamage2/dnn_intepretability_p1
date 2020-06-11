@@ -22,12 +22,11 @@ exp_params['model_location'] = 'models/output/lstm_adding_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 
-# exp_params['feature_sig_estimator'] = 'IG'
-exp_params['feature_sig_estimator'] = 'random'
+exp_params['feature_sig_estimator'] = 'IG'
+#exp_params['feature_sig_estimator'] = 'random'
 # exp_params['feature_sig_estimator'] = 'occlusion'
 # exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
-
 
 
 def plot_feature_sig(X_sig_scores, X, title_suffix=''):

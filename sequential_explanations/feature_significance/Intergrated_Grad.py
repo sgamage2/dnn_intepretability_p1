@@ -18,9 +18,10 @@ def get_ig_sig_scores(model, X):
     X_sig_scores = np.zeros(X.shape)
 
     ig = integrated_gradients(model)
+    #X_sig_scores = ig.explain(X[0], num_steps=10)
 
     for i in range(X.shape[0]):
-        scores = ig.explain(X[i], num_steps=1000)
+        scores = ig.explain(X[i], num_steps=100)
         X_sig_scores[i] = scores
 
     return X_sig_scores
@@ -37,8 +38,10 @@ class integrated_gradients:
         # load model supports keras.Model and keras.Sequential
         if isinstance(model, Sequential):
             self.model = model
+            print("Sequential model")
         elif isinstance(model, Model):
             self.model = model
+            print("Model model")
         else:
             print("Invalid input model")
             return -1

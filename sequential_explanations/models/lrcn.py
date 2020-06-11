@@ -94,6 +94,8 @@ class LRCNClassifier:
 
         lrcn_model = Model(cnn_input, lstm_output)
 
+        lrcn_model.compile(optimizer='adam', loss='categorical_crossentropy')
+
         return lrcn_model
 
     def fit_lstm(self, X_train, y_train, X_valid=None, y_valid=None):

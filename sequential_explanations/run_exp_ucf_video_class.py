@@ -10,6 +10,8 @@ import os, math, logging
 import matplotlib.pyplot as plt
 import utility
 from video_utility.data import DataSet
+from models import lrcn_ucf_video_classification
+
 
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
@@ -32,8 +34,9 @@ exp_params['output_nodes'] = 70  # No. of classes
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, IG, etc.
 #exp_params['feature_sig_estimator'] = 'occlusion'
-exp_params['feature_sig_estimator'] = 'random'
-
+#exp_params['feature_sig_estimator'] = 'random'
+exp_params['feature_sig_estimator'] = 'IG'
+#exp_params['feature_sig_estimator'] = 'gradient'
 
 
 def plot_feature_sig_rand_samples(X_sig_scores, X):
@@ -57,7 +60,7 @@ def plot_feature_sig_rand_samples(X_sig_scores, X):
 
 def main():
     utility.initialize(exp_params)
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # This line disables GPU
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # This line disables GPU
 
     # --------------------------------------
     # Load model and data. Test it works by evaluating the model on data
@@ -69,7 +72,7 @@ def main():
                       sequences_path=exp_params['sequences_path'])
 
 
-    X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=8)
+    X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=1)
 
     logging.info('X_test.shape = {}, y_test.shape = {}'.format(X_test.shape, y_test.shape))
     # X_test has shape: (num_samples, seq_length, width, height, channels=3)
@@ -125,8 +128,7 @@ def main():
     elif sig_estimator == 'grad_cam':
         assert False  # Not implemented yet
     elif sig_estimator == 'IG':
-        X_sig_scores = get_ig_sig_scores(model.ann, X_test)
-        print(X_sig_scores)
+        X_sig_scores = get_ig_sig_scores(model.lrcn_model, X_test)
         print(X_sig_scores.shape)
     elif sig_estimator == 'lime':
         X_test, y_test = get_distributed_sample(X_test, y_test, 12)
@@ -142,7 +144,7 @@ def main():
     # Plot feature significance scores of some examples (class=0 and class=1)
 
     #plot_video(X_test[0])
-    plot_feature_sig_rand_samples(X_sig_scores, X_test)
+    #plot_feature_sig_rand_samples(X_sig_scores, X_test)
     # plot_feature_sig_rand_samples(X_sig_scores, X_test, y_test)
 
 
