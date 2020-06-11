@@ -36,29 +36,24 @@ exp_params['output_nodes'] = 70  # No. of classes
 exp_params['feature_sig_estimator'] = 'occlusion'
 
 
-def plot_feature_sig_rand_samples(X_sig_scores, X, y):
-    title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
 
-    w = exp_params['img_width']
-    X_sig_scores = X_sig_scores.reshape(-1, w, w)
-    X = X.reshape(-1, w, w)
+
+def plot_feature_sig_rand_samples(X_sig_scores, X):
+    title_suffix = 'estimator=' + exp_params['feature_sig_estimator']
 
     fig = plt.figure(figsize=(10, 5))
     utility.add_figure_to_save(fig, 'feature_sig_' + title_suffix)
-    axes = fig.subplots(3, 4)
+    axes = fig.subplots(5, 8)
     axes = axes.flatten()
-
-    for i in range(11): # 11 plots
-        digit = i % exp_params['num_classes']   # 10 digits
-        X_sig_scores_digit = X_sig_scores[y == digit]
-        X_digit = X[y == digit]
-        rand_idx = np.random.randint(0, X_sig_scores_digit.shape[0])
-        X_sig_scores_digit = X_sig_scores_digit[rand_idx]
-        X_digit = X_digit[rand_idx]
-
-        im, hm = plot_feature_sig(axes[i], X_sig_scores_digit, X_digit, i)
-
-    fig.colorbar(hm, cax=axes[11], aspect=10)
+    for i in range(3):
+        X = X[i]
+        X_sig_scores = X_sig_scores[i]
+        for j in range(0, X.shape[0]):
+            axes[j].imshow(X[j])
+            axes[j].imshow(X_sig_scores[j])
+        plt.show()
+    #fig.colorbar(hm, cax=axes[X.shape[0]], aspect=40)
+    return -1
 
 
 
@@ -75,7 +70,9 @@ def main():
                       base_path=exp_params['data_base_path'],
                       sequences_path=exp_params['sequences_path'])
 
+
     X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=8)
+
     logging.info('X_test.shape = {}, y_test.shape = {}'.format(X_test.shape, y_test.shape))
     # X_test has shape: (num_samples, seq_length, width, height, channels=3)
 
@@ -145,7 +142,11 @@ def main():
 
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
+
+    #plot_video(X_test[0])
+    plot_feature_sig_rand_samples(X_sig_scores, X_test)
     # plot_feature_sig_rand_samples(X_sig_scores, X_test, y_test)
+
 
     # Plot the distribution of significance scores
     # plot_feature_sig_distribution(X_sig_scores, X_test, y_test)
