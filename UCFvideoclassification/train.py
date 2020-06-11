@@ -33,44 +33,7 @@ data = DataSet(
 #listt2=[]
 X, y = data.get_all_sequences_in_memory('train', 'features')
 X_test, y_test = data.get_all_sequences_in_memory('test', 'features')
-#print(X)
-#print(X.shape)
-#print(y)
-#print(y.shape)
-#print(X_test)
-#print(X_test.shape)
-#print(y_test)
-#print(y_test.shape)
-# for i in range(len(X)):
-#  for j in range(70):
-  #   if (y[i][j]==1) and not(j in listt):
-  #    listt.append(j)
-# for i in range(len(X_test)):
-#  for j in range(70):
-  #   if (y_test[i][j]==1) and not(j in listt2):
-  #    listt2.append(j)
-#print(listt)
-#print(listt2)
-#listt3= []
-# for i in range(len(listt2)):
-#  if not(listt2[i] in listt):
-  #   listt3.append(listt2[i])
-#X_test2 = X_test.copy()
-#y_test2 = y_test.copy()
-#for i in range(len(X_test)):
-  # flag=1
-  #for j in range(70):
-    # if(y_test[i][j]==1) and (j in listt3):
-    #  flag=0
-      # break
-  #if flag==1:
-    # X_test2 = np.append(X_test2,[X_test[i]],axis=0)
-    #y_test2 = np.append(y_test2,[y_test[i]],axis=0)
-#print(X_test2.shape)
-#print(y_test2.shape)
-#l = X_test2.shape[0]-X_test.shape[0]
-#X_test = X_test2[-l:,:,:]
-#y_test = y_test2[-l:,:]
+
 
 model = Sequential()
 model.add(LSTM(2048, return_sequences=False,input_shape=(40,2048),dropout=0.5))
