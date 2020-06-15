@@ -21,10 +21,15 @@ exp_params['img_width'] = 28
 exp_params['num_classes'] = 10
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, IG, etc.
+exp_params['feature_sig_estimator'] = 'random'
 #exp_params['feature_sig_estimator'] = 'occlusion'
-exp_params['feature_sig_estimator'] = 'IG'
+# exp_params['feature_sig_estimator'] = 'IG'
+
 
 def plot_feature_sig(ax, x_sig_scores, x, digit):
+    # print('x_sig_scores.shape = {}'.format(x_sig_scores.shape))
+    # print('x.shape = {}'.format(x.shape))
+
     xmin = np.min(x_sig_scores)
     xmax = np.max(x_sig_scores)
     # x_sig_scores = (x_sig_scores - xmin) / (xmax - xmin)

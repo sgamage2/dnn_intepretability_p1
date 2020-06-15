@@ -1,8 +1,10 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 import lime
 import lime.lime_tabular
-
+from lime import lime_image
+from skimage.segmentation import mark_boundaries
 
 def get_lime_feature_sig_scores(model, X_train, X_test, y_train, verbose=False):
     #If the feature is numerical, compute the mean and std, and discretize it into quartiles.
@@ -67,8 +69,24 @@ def get_lime_feature_sig_scores_lstm(model, X_train, X_test, y_train, feature_na
 
 
     # print(X_sig_scores)
-    # print(X_sig_scores.shape)
+    #print(X_sig_scores.shape)
     # print(X_sig_scores.ndim)
 
 
     return X_sig_scores
+
+def get_lime_feature_sig_scores_video(model, X_test):
+    singlevideo = X_test[0]
+    explainer = lime_image.LimeImageExplainer()
+
+    fig = plt.figure(figsize=(10, 5))
+    axes = fig.subplots(5, 8)
+    axes = axes.flatten()
+    for j in range(0, singlevideo.shape[0]):
+        explanation = explainer.explain_instance(singlevideo[j], model.cnn.predict, top_labels=5, hide_color=0, num_samples=1000)
+        temp, mask = explanation.get_image_and_mask(explanation.top_labels[0], positive_only=False, num_features=10,
+                                                    hide_rest=False)
+        axes[j].imshow(mark_boundaries(temp / 2 + 0.5, mask))
+    plt.show()
+
+    return -1

@@ -112,8 +112,10 @@ class DataSet:
         images = sorted(glob.glob(os.path.join(path, filename + '*jpg')))
         return images
 
-    def get_frames_for_sample_set(self, train_test, num_samples):
-        """Get a given no. of samples from a dataset """
+    def get_frames_for_sample_set(self, train_test, num_samples, random_seed=None):
+        if random_seed is not None:
+            random.seed(random_seed)
+
         train, test = self.split_train_test()
         data = train if train_test == 'train' else test
 
