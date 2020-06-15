@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import utility
 from video_utility.data import DataSet
 
-
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.shapley import get_shapley_feature_sig_scores
@@ -38,9 +37,11 @@ exp_params['output_nodes'] = 70  # No. of classes
 
 # exp_params['feature_sig_estimator'] = 'IG'
 #exp_params['feature_sig_estimator'] = 'gradient'
-#exp_params['feature_sig_estimator'] = 'random'
+# exp_params['feature_sig_estimator'] = 'random'
 #exp_params['feature_sig_estimator'] = 'occlusion'
 exp_params['feature_sig_estimator'] = 'lime'
+
+
 
 def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
@@ -121,11 +122,9 @@ def main():
                       base_path=exp_params['data_base_path'],
                       sequences_path=exp_params['sequences_path'])
 
-
     X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=1, random_seed=exp_params['random_seed'])
 
     # X_test = X_test[:, :10, ::10, :]   # Down sample!!!
-
 
     logging.info('X_test.shape = {}, y_test.shape = {}'.format(X_test.shape, y_test.shape))
     # X_test has shape: (num_samples, seq_length, width, height, channels=3)
@@ -196,10 +195,11 @@ def main():
     # Plot feature significance scores of some examples (class=0 and class=1)
 
 
+
     #plot_video(X_test[0])
-    #plot_feature_sig_rand_samples(X_sig_scores, X_test)
     # plot_feature_sig_video_single_frame(X_sig_scores[0], X_test[0], timestep=0)
     plot_feature_sig_video(X_sig_scores[0], X_test[0])
+
     #plot_feature_sig_rand_samples(X_sig_scores, X_test)
 
     # plot_feature_sig_rand_samples(X_sig_scores, X_test, y_test)
