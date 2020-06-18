@@ -99,6 +99,7 @@ class LRCNClassifier:
 
         return lrcn_model
 
+
     def fit_lstm(self, X_train, y_train, X_valid=None, y_valid=None):
         epochs = self.params['lstm_epochs']
         batch_size = self.params['lstm_batch_size']

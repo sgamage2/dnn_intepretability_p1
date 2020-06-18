@@ -11,9 +11,10 @@ import matplotlib.pyplot as plt
 import utility
 from video_utility.data import DataSet
 
+
 from feature_significance.random_feature_sig import get_random_feature_sig_scores
 from feature_significance.gradient_saliency import get_gradient_saliency_scores
-from feature_significance.shapley import get_shapley_feature_sig_scores
+from feature_significance.shapley import get_shapley_video
 from feature_significance.Intergrated_Grad import get_ig_sig_scores
 from feature_significance.LIME import get_lime_feature_sig_scores_video
 from feature_significance.occlusion import get_occlusion_scores
@@ -39,8 +40,8 @@ exp_params['output_nodes'] = 70  # No. of classes
 #exp_params['feature_sig_estimator'] = 'gradient'
 # exp_params['feature_sig_estimator'] = 'random'
 #exp_params['feature_sig_estimator'] = 'occlusion'
-exp_params['feature_sig_estimator'] = 'lime'
-
+#exp_params['feature_sig_estimator'] = 'lime'
+exp_params['feature_sig_estimator'] = 'shap'
 
 
 def rgb2gray(rgb):
@@ -122,10 +123,11 @@ def main():
                       base_path=exp_params['data_base_path'],
                       sequences_path=exp_params['sequences_path'])
 
+    X_train, y_train = dataset.get_frames_for_sample_set('train', num_samples=1, random_seed=exp_params['random_seed'])
     X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=1, random_seed=exp_params['random_seed'])
 
     # X_test = X_test[:, :10, ::10, :]   # Down sample!!!
-
+    logging.info('X_train.shape = {}, y_train.shape = {}'.format(X_train.shape, y_train.shape))
     logging.info('X_test.shape = {}, y_test.shape = {}'.format(X_test.shape, y_test.shape))
     # X_test has shape: (num_samples, seq_length, width, height, channels=3)
 
@@ -176,7 +178,7 @@ def main():
         X_test = np.concatenate(X_digit_list)
         y_test = np.concatenate(y_digit_list)
     elif sig_estimator == 'shap':
-        X_sig_scores = get_shapley_feature_sig_scores(model.ann, X_train, X_test)
+        plot = get_shapley_video(model.cnn, X_test)
     elif sig_estimator == 'grad_cam':
         assert False  # Not implemented yet
     elif sig_estimator == 'IG':
@@ -198,7 +200,8 @@ def main():
 
     #plot_video(X_test[0])
     # plot_feature_sig_video_single_frame(X_sig_scores[0], X_test[0], timestep=0)
-    plot_feature_sig_video(X_sig_scores[0], X_test[0])
+
+    #plot_feature_sig_video(X_sig_scores[0], X_test[0])
 
     #plot_feature_sig_rand_samples(X_sig_scores, X_test)
 
