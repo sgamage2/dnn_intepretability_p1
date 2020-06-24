@@ -13,6 +13,8 @@ from feature_significance.LIME import get_lime_feature_sig_scores
 from feature_significance.shapley import get_shapley_feature_sig_scores
 from feature_significance.occlusion import get_occlusion_scores
 
+from metrics.occlusion_metrics import get_occlusion_accuracies
+
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
@@ -24,11 +26,11 @@ exp_params['model_location'] = 'models/output/ann_toy_good'
 
 
 #exp_params['feature_sig_estimator'] = 'random'
-#exp_params['feature_sig_estimator'] = 'IG'
+exp_params['feature_sig_estimator'] = 'IG'
 # exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
 # exp_params['feature_sig_estimator'] = 'occlusion'
-exp_params['feature_sig_estimator'] = 'shap'
+# exp_params['feature_sig_estimator'] = 'shap'
 
 def plot_feature_sig(X_sig_scores, title_suffix=''):
     num_samples = X_sig_scores.shape[0]
@@ -201,7 +203,16 @@ def main():
     # --------------------------------------
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
-    
+
+    remove_ratios, function_vals, accuracies = get_occlusion_accuracies(model.ann, X_test, y_test, X_sig_scores, fill_value=0)
+
+    print(remove_ratios)
+    print(function_vals)
+    print(accuracies)
+
+    utility.plot_occlusion_curve(remove_ratios, function_vals, "avg_function_val")
+    utility.plot_occlusion_curve(remove_ratios, accuracies, "accuracy")
+
     utility.save_all_figures(exp_params['results_dir'])
     plt.show()
 

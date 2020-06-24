@@ -165,7 +165,8 @@ def main():
     elif sig_estimator == 'occlusion':
         y_test_class = y_test.argmax(axis=1)
         X_sig_scores = get_occlusion_scores_lrcn(model.lrcn_model, X_test, output_layer_idx=-1,
-                                                       output_node=y_test_class, mask_window_size=32, stride=16, fill_value=0)
+                                                   output_node=y_test_class, mask_window_size=32,
+                                                   img_window_stride=16, time_stride=10, fill_value=0)
 
         # X_digit_sig_scores_list = []
         # X_digit_list = []

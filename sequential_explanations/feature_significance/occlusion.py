@@ -56,8 +56,9 @@ def get_occlusion_scores_lstm(model, X, output_layer_idx, mask_size=1, stride=1,
     return X_sig_scores
 
 
-def get_occlusion_scores_lrcn(model, X, output_layer_idx, output_node, mask_window_size=32, stride=16, mask_full_timestep=False, fill_value=0):
-    assert stride <= mask_window_size  # Ensure we don't miss any feature for occlusion
+def get_occlusion_scores_lrcn(model, X, output_layer_idx, output_node, mask_window_size=32, img_window_stride=16,
+                              mask_full_timestep=False, time_stride=10, fill_value=0):
+    assert img_window_stride <= mask_window_size  # Ensure we don't miss any feature for occlusion
     X_sig_scores = np.zeros(X.shape)
     num_samples, num_timesteps, height, width, channels = X.shape[0], X.shape[1], X.shape[2], X.shape[3], X.shape[4]
 
@@ -70,11 +71,9 @@ def get_occlusion_scores_lrcn(model, X, output_layer_idx, output_node, mask_wind
 
     if mask_full_timestep:
         mask_window_size = width
-        stride = 1
+        img_window_stride = 1
 
     m = mask_window_size
-
-    time_stride = 10
 
     for t in range(0, num_timesteps, time_stride):  # Each frame separately
         # X_occluded = np.array(X, copy=True)
@@ -82,8 +81,8 @@ def get_occlusion_scores_lrcn(model, X, output_layer_idx, output_node, mask_wind
         print('t = {}'.format(t))
 
         # Mask 2-D patches
-        for row in range(0, height - m + 1, stride):
-            for col in range(0, width - m + 1, stride):
+        for row in range(0, height - m + 1, img_window_stride):
+            for col in range(0, width - m + 1, img_window_stride):
                 # print('row = {}, col = {}'.format(row, col))
                 X_occluded = np.array(X, copy=True)
 
