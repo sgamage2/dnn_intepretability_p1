@@ -22,9 +22,9 @@ exp_params['model_location'] = 'models/output/lstm_adding_good'
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, ig, etc.
 
-exp_params['feature_sig_estimator'] = 'IG'
-#exp_params['feature_sig_estimator'] = 'random'
-# exp_params['feature_sig_estimator'] = 'occlusion'
+# exp_params['feature_sig_estimator'] = 'IG'
+# exp_params['feature_sig_estimator'] = 'random'
+exp_params['feature_sig_estimator'] = 'occlusion'
 # exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
 #exp_params['feature_sig_estimator'] = 'shap'
@@ -178,9 +178,8 @@ def main():
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
 
-
     utility.save_all_figures(exp_params['results_dir'])
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':

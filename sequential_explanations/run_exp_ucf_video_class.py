@@ -17,14 +17,14 @@ from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.shapley import get_shapley_video
 from feature_significance.Intergrated_Grad import get_ig_sig_scores
 from feature_significance.LIME import get_lime_feature_sig_scores_video
-from feature_significance.occlusion import get_occlusion_scores
+from feature_significance.occlusion import get_occlusion_scores_lrcn
 
 exp_params = {}
 exp_params['random_seed'] = 0
 exp_params['data_base_path'] = '/home/jiazhi/videoucftest/data'
 exp_params['sequences_path'] = '/home/jiazhi/videoucftest/data/sequences111'
 exp_params['results_dir'] = 'output'
-exp_params['exp_id'] = 'lrcn_ucf_video_classification'
+exp_params['exp_id'] = 'lrcn'
 exp_params['model_location'] = 'models/output/lrcn_video_good'
 exp_params['image_shape'] = (224, 224, 3)
 exp_params['lstm_layer_units'] = [256, 256]
@@ -37,11 +37,11 @@ exp_params['output_nodes'] = 70  # No. of classes
 
 
 # exp_params['feature_sig_estimator'] = 'IG'
-#exp_params['feature_sig_estimator'] = 'gradient'
+# exp_params['feature_sig_estimator'] = 'gradient'
 # exp_params['feature_sig_estimator'] = 'random'
-#exp_params['feature_sig_estimator'] = 'occlusion'
+exp_params['feature_sig_estimator'] = 'occlusion'
 #exp_params['feature_sig_estimator'] = 'lime'
-exp_params['feature_sig_estimator'] = 'shap'
+# exp_params['feature_sig_estimator'] = 'shap'
 
 
 def rgb2gray(rgb):
@@ -163,20 +163,24 @@ def main():
     elif sig_estimator == 'gradient':
         X_sig_scores = get_gradient_saliency_scores(model.lrcn_model, X_test, -2)
     elif sig_estimator == 'occlusion':
-        X_digit_sig_scores_list = []
-        X_digit_list = []
-        y_digit_list = []
-        for digit in range(exp_params['num_classes']):  # Get scores for each class separately
-            X_digit = X_test[y_test == digit]
-            y_digit = np.full((X_digit.shape[0],), digit)
-            X_digit_sig_scores = get_occlusion_scores(model.lrcn_model, X_digit, output_layer_idx=-1, output_node=digit,
-                                                      mask_size=20, stride=4, fill_value=0)
-            X_digit_sig_scores_list.append(X_digit_sig_scores)
-            X_digit_list.append(X_digit)
-            y_digit_list.append(y_digit)
-        X_sig_scores = np.concatenate(X_digit_sig_scores_list)
-        X_test = np.concatenate(X_digit_list)
-        y_test = np.concatenate(y_digit_list)
+        y_test_class = y_test.argmax(axis=1)
+        X_sig_scores = get_occlusion_scores_lrcn(model.lrcn_model, X_test, output_layer_idx=-1,
+                                                       output_node=y_test_class, mask_window_size=32, stride=16, fill_value=0)
+
+        # X_digit_sig_scores_list = []
+        # X_digit_list = []
+        # y_digit_list = []
+        # for digit in range(exp_params['num_classes']):  # Get scores for each class separately
+        #     X_digit = X_test[y_test == digit]
+        #     y_digit = np.full((X_digit.shape[0],), digit)
+        #     X_digit_sig_scores = get_occlusion_scores_lrcn(model.lrcn_model, X_digit, output_layer_idx=-1, output_node=digit,
+        #                                               mask_size=20, stride=4, fill_value=0)
+        #     X_digit_sig_scores_list.append(X_digit_sig_scores)
+        #     X_digit_list.append(X_digit)
+        #     y_digit_list.append(y_digit)
+        # X_sig_scores = np.concatenate(X_digit_sig_scores_list)
+        # X_test = np.concatenate(X_digit_list)
+        # y_test = np.concatenate(y_digit_list)
     elif sig_estimator == 'shap':
         plot = get_shapley_video(model.cnn, X_test)
     elif sig_estimator == 'grad_cam':
@@ -197,13 +201,11 @@ def main():
     # Plot feature significance scores of some examples (class=0 and class=1)
 
 
+    plot_feature_sig_video_single_frame(X_sig_scores[0], X_test[0], timestep=0)
 
-    #plot_video(X_test[0])
-    # plot_feature_sig_video_single_frame(X_sig_scores[0], X_test[0], timestep=0)
+    plot_feature_sig_video(X_sig_scores[0], X_test[0])
 
-    #plot_feature_sig_video(X_sig_scores[0], X_test[0])
-
-    #plot_feature_sig_rand_samples(X_sig_scores, X_test)
+    # plot_feature_sig_rand_samples(X_sig_scores, X_test)
 
     # plot_feature_sig_rand_samples(X_sig_scores, X_test, y_test)
 
