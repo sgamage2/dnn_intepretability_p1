@@ -9,8 +9,10 @@ from feature_significance.gradient_saliency import get_gradient_saliency_scores
 from feature_significance.LIME import get_lime_feature_sig_scores_lstm
 from feature_significance.Intergrated_Grad import get_ig_sig_scores
 from feature_significance.occlusion import get_occlusion_scores_lstm
-
 from feature_significance.shapley import get_shapley_feature_sig_scores
+
+from metrics.occlusion_metrics import get_occlusion_metric_lstm, get_occlusion_metric_lstm_masked_timesteps
+
 
 import pandas as pd
 
@@ -173,10 +175,20 @@ def main():
     # Plot the average feature significance scores (average across samples) of each class
     plot_feature_sig_average(X_sig_scores, y_test)
 
-
     # --------------------------------------
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
+
+    remove_ratios, function_vals, mse = get_occlusion_metric_lstm(model.lstm, X_test, y_test, X_sig_scores, fill_value=0)
+    utility.plot_occlusion_curve(remove_ratios, function_vals, "individual_features_avg_function_val_")
+    utility.plot_occlusion_curve(remove_ratios, mse, "individual_features_mse")
+
+    remove_ratios, function_vals, mse = get_occlusion_metric_lstm_masked_timesteps(model.lstm, X_test, y_test, X_sig_scores, fill_value=0)
+    utility.plot_occlusion_curve(remove_ratios, function_vals, "full_timestep_avg_function_val")
+    utility.plot_occlusion_curve(remove_ratios, mse, "full_timestep_mse")
+
+    # --------------------------------------
+    # Final actions
 
     utility.save_all_figures(exp_params['results_dir'])
     # plt.show()

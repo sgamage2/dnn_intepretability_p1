@@ -28,8 +28,7 @@ def get_occlusion_scores(model, X, output_layer_idx, output_node=0, mask_size=1,
 def get_occlusion_scores_lstm(model, X, output_layer_idx, mask_size=1, stride=1, mask_full_timestep=False, fill_value=0):
     assert stride <= mask_size  # Ensure we don't miss any feature for occlusion
     X_sig_scores = np.zeros(X.shape)
-    num_timesteps = X.shape[1]
-    num_features = X.shape[2]
+    num_timesteps, num_features = X.shape[1], X.shape[2]
 
     temp_output_layer = model.layers[output_layer_idx]
     temp_model = tf.keras.models.Model(inputs=model.input, outputs=temp_output_layer.output)

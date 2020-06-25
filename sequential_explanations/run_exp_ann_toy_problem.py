@@ -13,7 +13,7 @@ from feature_significance.LIME import get_lime_feature_sig_scores
 from feature_significance.shapley import get_shapley_feature_sig_scores
 from feature_significance.occlusion import get_occlusion_scores
 
-from metrics.occlusion_metrics import get_occlusion_accuracies
+from metrics.occlusion_metrics import get_occlusion_metric
 
 
 exp_params = {}
@@ -204,14 +204,17 @@ def main():
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
 
-    remove_ratios, function_vals, accuracies = get_occlusion_accuracies(model.ann, X_test, y_test, X_sig_scores, fill_value=0)
-
+    remove_ratios, function_vals, accuracies = get_occlusion_metric(model.ann, X_test, y_test, X_sig_scores,
+                                                                    metric='accuracy', fill_value=0)
     print(remove_ratios)
     print(function_vals)
     print(accuracies)
 
     utility.plot_occlusion_curve(remove_ratios, function_vals, "avg_function_val")
     utility.plot_occlusion_curve(remove_ratios, accuracies, "accuracy")
+
+    # --------------------------------------
+    # Final actions
 
     utility.save_all_figures(exp_params['results_dir'])
     plt.show()
