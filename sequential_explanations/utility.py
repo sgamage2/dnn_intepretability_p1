@@ -361,12 +361,17 @@ def load_model(directory):
     return model_wrapper
 
 
-def plot_occlusion_curve(remove_ratios, vals, value_type):
+def plot_occlusion_curve(remove_ratios, vals, auc, value_type):
     fig = plt.figure()
     add_figure_to_save(fig, 'occlusion_curve_' + value_type)
     plt.title("Occlusion curve: " + value_type)
 
-    plt.plot(remove_ratios, vals,)
+    plt.plot(remove_ratios, vals, label='AUC = %0.2f' % auc)
 
     plt.xlabel("% most sig. features replaced")
     plt.ylabel(value_type)
+    plt.legend()
+
+
+def get_auc(x, y):
+    return np.trapz(y, x)

@@ -11,7 +11,7 @@ from feature_significance.Intergrated_Grad import get_ig_sig_scores
 from feature_significance.occlusion import get_occlusion_scores_lstm
 from feature_significance.shapley import get_shapley_feature_sig_scores
 
-from metrics.occlusion_metrics import get_occlusion_metric_lstm, get_occlusion_metric_lstm_masked_timesteps
+from metrics.occlusion_metrics import get_occlusion_metric_seq_individual_features, get_occlusion_metric_seq_mask_full_timesteps
 
 
 import pandas as pd
@@ -179,13 +179,22 @@ def main():
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
 
-    remove_ratios, function_vals, mse = get_occlusion_metric_lstm(model.lstm, X_test, y_test, X_sig_scores, fill_value=0)
-    utility.plot_occlusion_curve(remove_ratios, function_vals, "individual_features_avg_function_val_")
-    utility.plot_occlusion_curve(remove_ratios, mse, "individual_features_mse")
+    remove_ratios, function_vals, mse = get_occlusion_metric_seq_individual_features(model.lstm, X_test, y_test, X_sig_scores, fill_value=0)
+    f_auc = utility.get_auc(remove_ratios, function_vals)
+    m_auc = utility.get_auc(remove_ratios, mse)
+    utility.plot_occlusion_curve(remove_ratios, function_vals, f_auc, "individual_features_avg_function_val")
+    utility.plot_occlusion_curve(remove_ratios, mse, m_auc, "individual_features_mse")
 
-    remove_ratios, function_vals, mse = get_occlusion_metric_lstm_masked_timesteps(model.lstm, X_test, y_test, X_sig_scores, fill_value=0)
-    utility.plot_occlusion_curve(remove_ratios, function_vals, "full_timestep_avg_function_val")
-    utility.plot_occlusion_curve(remove_ratios, mse, "full_timestep_mse")
+    logging.info('Occlusion metrics (seq_individual): f_auc = {:.2f}, m_auc = {:.2f}'.format(f_auc, m_auc))
+
+    remove_ratios, function_vals, mse = get_occlusion_metric_seq_mask_full_timesteps(model.lstm, X_test, y_test, X_sig_scores, fill_value=0)
+    f_auc = utility.get_auc(remove_ratios, function_vals)
+    m_auc = utility.get_auc(remove_ratios, mse)
+    utility.plot_occlusion_curve(remove_ratios, function_vals, f_auc, "full_timestep_avg_function_val")
+    utility.plot_occlusion_curve(remove_ratios, mse, m_auc, "full_timestep_mse")
+
+    logging.info('Occlusion metrics (seq_mask_full_timesteps): f_auc = {:.2f}, m_auc = {:.2f}'.format(f_auc, m_auc))
+
 
     # --------------------------------------
     # Final actions

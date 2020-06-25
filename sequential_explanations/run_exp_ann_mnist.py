@@ -12,6 +12,8 @@ from feature_significance.Intergrated_Grad import get_ig_sig_scores
 from feature_significance.LIME import get_lime_feature_sig_scores
 from feature_significance.occlusion import get_occlusion_scores
 
+from metrics.occlusion_metrics import get_occlusion_metric_tabular, get_occlusion_metric_flat_images
+
 
 exp_params = {}
 exp_params['results_dir'] = 'output'
@@ -21,10 +23,11 @@ exp_params['img_width'] = 28
 exp_params['num_classes'] = 10
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, IG, etc.
-#exp_params['feature_sig_estimator'] = 'random'
+exp_params['feature_sig_estimator'] = 'random'
 #exp_params['feature_sig_estimator'] = 'occlusion'
 # exp_params['feature_sig_estimator'] = 'IG'
-exp_params['feature_sig_estimator'] = 'shap'
+# exp_params['feature_sig_estimator'] = 'shap'
+
 
 def plot_feature_sig(ax, x_sig_scores, x, digit):
     # print('x_sig_scores.shape = {}'.format(x_sig_scores.shape))
@@ -239,6 +242,29 @@ def main():
     # --------------------------------------
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
+
+    remove_ratios, function_vals, accuracies = get_occlusion_metric_tabular(model.ann, X_test, y_test, X_sig_scores,
+                                                                    metric='accuracy', fill_value=0)
+    f_auc = utility.get_auc(remove_ratios, function_vals)
+    a_auc = utility.get_auc(remove_ratios, accuracies)
+
+    utility.plot_occlusion_curve(remove_ratios, function_vals, f_auc, "tabular_avg_function_val")
+    utility.plot_occlusion_curve(remove_ratios, accuracies, a_auc, "tabular_accuracy")
+
+    logging.info('Occlusion metrics (tabular): f_auc = {:.2f}, a_auc = {:.2f}'.format(f_auc, a_auc))
+
+    remove_ratios, function_vals, accuracies = get_occlusion_metric_flat_images(model.ann, X_test, y_test, X_sig_scores,
+                                                                    exp_params['img_width'], mask_size=2, fill_value=0)
+    f_auc = utility.get_auc(remove_ratios, function_vals)
+    a_auc = utility.get_auc(remove_ratios, accuracies)
+
+    utility.plot_occlusion_curve(remove_ratios, function_vals, f_auc, "imgs_avg_function_val")
+    utility.plot_occlusion_curve(remove_ratios, accuracies, a_auc, "imgs_accuracy")
+
+    logging.info('Occlusion metrics (flat images): f_auc = {:.2f}, a_auc = {:.2f}'.format(f_auc, a_auc))
+
+    # --------------------------------------
+    # Final actions
 
     utility.save_all_figures(exp_params['results_dir'])
     plt.show()
