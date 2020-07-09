@@ -18,6 +18,7 @@ from feature_significance.shapley import get_shapley_video
 from feature_significance.Intergrated_Grad import get_ig_sig_scores
 from feature_significance.LIME import get_lime_feature_sig_scores_video
 from feature_significance.occlusion import get_occlusion_scores_lrcn
+from feature_significance.lrp.LRPModel import LRPModel
 
 from metrics.occlusion_metrics import get_occlusion_metric_video
 
@@ -43,9 +44,11 @@ exp_params['output_nodes'] = 70  # No. of classes
 # exp_params['feature_sig_estimator'] = 'gradient'
 exp_params['feature_sig_estimator'] = 'random'
 # exp_params['feature_sig_estimator'] = 'occlusion'
+# exp_params['feature_sig_estimator'] = 'random'
+#exp_params['feature_sig_estimator'] = 'occlusion'
 #exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'shap'
-
+# exp_params['feature_sig_estimator'] = 'lrp'
 
 def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
@@ -194,20 +197,28 @@ def main():
         print(X_sig_scores.shape)
     elif sig_estimator == 'lime':
         plots = get_lime_feature_sig_scores_video(model, X_test)
+    elif sig_estimator == 'lrp':
+        X_test = X_test[0]
+        image = X_test[0]
+        image = image[np.newaxis, ...]
+        lrpmodel = LRPModel(model.cnn)
+        lrp_result = lrpmodel.perform_lrp(image)
+        print(lrp_result)
+        #print(R)
     else:
         assert False  # Unknown feature significance method
 
-    logging.info('X_sig_scores.shape = {}'.format(X_sig_scores.shape))
+    #logging.info('X_sig_scores.shape = {}'.format(X_sig_scores.shape))
 
-    logging.info('Plotting feature significance values')
+    #logging.info('Plotting feature significance values')
 
     # --------------------------------------
     # Plot feature significance scores of some examples (class=0 and class=1)
 
 
-    plot_feature_sig_video_single_frame(X_sig_scores[0], X_test[0], timestep=0)
+    #plot_feature_sig_video_single_frame(X_sig_scores[0], X_test[0], timestep=0)
 
-    plot_feature_sig_video(X_sig_scores[0], X_test[0])
+    #plot_feature_sig_video(X_sig_scores[0], X_test[0])
 
     # plot_feature_sig_rand_samples(X_sig_scores, X_test)
 
