@@ -23,10 +23,10 @@ exp_params['img_width'] = 28
 exp_params['num_classes'] = 10
 
 # Options: random, gradient, occlusion, lrp, shap, lime, grad_cam, IG, etc.
-exp_params['feature_sig_estimator'] = 'random'
-#exp_params['feature_sig_estimator'] = 'occlusion'
+# exp_params['feature_sig_estimator'] = 'random'
+# exp_params['feature_sig_estimator'] = 'occlusion'
 # exp_params['feature_sig_estimator'] = 'IG'
-# exp_params['feature_sig_estimator'] = 'shap'
+exp_params['feature_sig_estimator'] = 'shap'
 
 
 def plot_feature_sig(ax, x_sig_scores, x, digit):
@@ -117,6 +117,7 @@ def plot_feature_sig_average_abs(X_sig_scores, y):
     plt.subplot(1, 2, 2)
     plt.gca().set_title('class=1')
     shap.summary_plot(X_avg_sig_scores_class_1, plot_type='bar', show=False, sort=False, plot_size=(10,10))
+
 
 def plot_feature_sig_average_signed(X_sig_scores, y):
     X_avg_sig_scores_class_0 = np.mean(X_sig_scores[y == 0], axis=0)

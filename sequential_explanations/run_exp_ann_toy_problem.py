@@ -25,12 +25,12 @@ exp_params['model_location'] = 'models/output/ann_toy_good'
 
 
 
-#exp_params['feature_sig_estimator'] = 'random'
-exp_params['feature_sig_estimator'] = 'IG'
+# exp_params['feature_sig_estimator'] = 'random'
+# exp_params['feature_sig_estimator'] = 'IG'
 # exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'gradient'
 # exp_params['feature_sig_estimator'] = 'occlusion'
-# exp_params['feature_sig_estimator'] = 'shap'
+exp_params['feature_sig_estimator'] = 'shap'
 
 def plot_feature_sig(X_sig_scores, title_suffix=''):
     num_samples = X_sig_scores.shape[0]
@@ -214,7 +214,6 @@ def main():
     utility.plot_occlusion_curve(remove_ratios, accuracies, a_auc, "accuracy")
 
     logging.info('Occlusion metrics: f_auc = {:.2f}, a_auc = {:.2f}'.format(f_auc, a_auc))
-
 
     # --------------------------------------
     # Final actions

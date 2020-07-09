@@ -72,6 +72,31 @@ class LRP:
         self.pool_strides = pool_strides
         self.name = name
 
+
+    def __init__(self, alpha, beta, model):
+        self.model = model
+
+
+    def get_relevance(self, x, class_idx):
+        activations = self.model.all_layer_activations(x)
+        model_output = self.model.predict(x)
+
+        for layer in self.model.layers:
+            all_weights = layer.get_weights()
+            weights = just_weights(all_weights) # Weights  of this layer
+            biases = just_biases(all_weights)
+            act = activations[i]    # Activations of this layer
+
+            if last_layer:
+                R = model_output
+                continue
+
+            if layer.type == 'dense':
+                R = self.backprop_dense(activations, weights, biases, R)
+
+        return R
+
+
     def __call__(self, logit):
 
         with tf.name_scope(self.name):
