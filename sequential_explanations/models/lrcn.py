@@ -135,6 +135,9 @@ class LRCNClassifier:
         return history
 
     def predict(self, X_video_frames):
+        return self.cnn.predict(X_video_frames)
+
+    def predict(self, X_video_frames):
         return self.lrcn_model.predict(X_video_frames)
         # return self.cnn.predict(X_video_frames)
 
