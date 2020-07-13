@@ -20,6 +20,9 @@ from feature_significance.LIME import get_lime_feature_sig_scores_video
 from feature_significance.occlusion import get_occlusion_scores_lrcn
 from feature_significance.lrp.LRPModel import LRPModel
 
+from metrics.occlusion_metrics import get_occlusion_metric_video
+
+
 exp_params = {}
 exp_params['random_seed'] = 0
 exp_params['data_base_path'] = '/home/jiazhi/videoucftest/data'
@@ -39,11 +42,13 @@ exp_params['output_nodes'] = 70  # No. of classes
 
 # exp_params['feature_sig_estimator'] = 'IG'
 # exp_params['feature_sig_estimator'] = 'gradient'
+exp_params['feature_sig_estimator'] = 'random'
+# exp_params['feature_sig_estimator'] = 'occlusion'
 # exp_params['feature_sig_estimator'] = 'random'
 #exp_params['feature_sig_estimator'] = 'occlusion'
 #exp_params['feature_sig_estimator'] = 'lime'
 # exp_params['feature_sig_estimator'] = 'shap'
-exp_params['feature_sig_estimator'] = 'lrp'
+# exp_params['feature_sig_estimator'] = 'lrp'
 
 def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
@@ -124,8 +129,8 @@ def main():
                       base_path=exp_params['data_base_path'],
                       sequences_path=exp_params['sequences_path'])
 
-    X_train, y_train = dataset.get_frames_for_sample_set('train', num_samples=1, random_seed=exp_params['random_seed'])
-    X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=1, random_seed=exp_params['random_seed'])
+    X_train, y_train = dataset.get_frames_for_sample_set('train', num_samples=10, random_seed=exp_params['random_seed'])
+    X_test, y_test = dataset.get_frames_for_sample_set('test', num_samples=10, random_seed=exp_params['random_seed'])
 
     # X_test = X_test[:, :10, ::10, :]   # Down sample!!!
     logging.info('X_train.shape = {}, y_train.shape = {}'.format(X_train.shape, y_train.shape))
@@ -230,6 +235,21 @@ def main():
     # --------------------------------------
     # Evaluation metrics for feature significance
     # Call evaluation metrics functions in 'metrics' directory here
+
+    # --------------------------------------
+    # Evaluation metrics for feature significance
+    # Call evaluation metrics functions in 'metrics' directory here
+
+    remove_ratios, function_vals, accuracies = get_occlusion_metric_video(model.lrcn_model, X_test, y_test, X_sig_scores,
+                                                                            mask_size=8, fill_value=0)
+    f_auc = utility.get_auc(remove_ratios, function_vals)
+    a_auc = utility.get_auc(remove_ratios, accuracies)
+
+    utility.plot_occlusion_curve(remove_ratios, function_vals, f_auc, "tabular_avg_function_val")
+    utility.plot_occlusion_curve(remove_ratios, accuracies, a_auc, "tabular_accuracy")
+
+    # --------------------------------------
+    # Final actions
 
     utility.save_all_figures(exp_params['results_dir'])
     plt.show()
