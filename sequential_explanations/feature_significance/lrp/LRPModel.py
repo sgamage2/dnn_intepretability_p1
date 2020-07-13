@@ -7,24 +7,27 @@ from feature_significance.lrp.globalavgpool import GlobalAvgPool
 from feature_significance.lrp.concatenation import Concatenation
 from feature_significance.lrp.batchnormalization import BatchNormalization
 import numpy as np
+from keras import backend as K
 
-class LRPModel():
+class LRPModel(tf.keras.Model):
 
     def __init__(self, model):
 
+        super(LRPModel, self).__init__()
+
         self.source_model = model
-        all_outputs = []
-        for layer in model.layers:
-            all_outputs.append(layer.output)
+        all_outputs = [layer.output for layer in model.layers][1:]
+        #all_outputs = []
+        #for layer in model.layers:
+            #all_outputs.append(layer.output)
         #tf.keras.Model.__init__(self, model.inputs, all_outputs)
-        # super().__init__(self, model.inputs, all_outputs)
+        super(LRPModel, self).__init__(inputs=self.source_model.inputs,
+                                            outputs=all_outputs)
 
         print(model.summary())
 
     def perform_lrp(self, X):
-        output = self.source_model.predict(X)
-        output = output.flatten()
-        print(output.shape)
+        output = self.predict(X)
         layer_R = {}
         layer_R[self.source_model.layers[-1].name] = output[-1]
         for layer in reversed(self.source_model.layers):
@@ -38,7 +41,7 @@ class LRPModel():
                 for from_layer in from_layers:
                     print(layer.name, from_layer.name)
                     from_layer_index = self.source_model.layers.index(from_layer)
-                    # print(layer_R[layer.name].shape, output[from_layer_index].shape)
+                    #print(layer_R[layer.name].shape, output[from_layer_index].shape)
                     layer_R[from_layer.name] = r_layer.lrp(layer_R[layer.name], output[from_layer_index])
 
             elif len(from_layers) == 1:
@@ -54,17 +57,16 @@ class LRPModel():
                 elif type(layer) is tf.keras.layers.MaxPooling2D:
                     r_layer = MaxPool(layer, output[from_layer_index], output[layer_index])
                 elif type(layer) is tf.keras.layers.GlobalAveragePooling2D:
-                    r_layer = GlobalAvgPool(layer, output[from_layer_index])
+                    r_layer = GlobalAvgPool(layer, output[from_layer_index]) #(1,2048)
                 elif type(layer) is tf.keras.layers.BatchNormalization:
                     r_layer = BatchNormalization(layer, output[from_layer_index])
                 else:
                     print("skip", layer.name)
                     layer_R[from_layer.name] = layer_R[layer.name]
                     continue
-                print(layer_R[layer.name])
                 layer_R[from_layer.name] = r_layer._simple_lrp(layer_R[layer.name])
             else:
-                #done
+                # done
                 break
 
             print(layer.name, from_layer.name, np.average(layer_R[layer.name]))

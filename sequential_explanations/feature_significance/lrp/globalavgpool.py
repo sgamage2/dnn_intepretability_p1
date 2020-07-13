@@ -19,7 +19,8 @@ class GlobalAvgPool:
 
     def __init__(self, layer, X):
 
-        self.X = X
+        self.X = X #(1, 2048)
+
 
     def _simple_lrp(self, R):
         '''
