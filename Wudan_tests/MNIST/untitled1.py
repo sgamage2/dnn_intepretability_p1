@@ -148,6 +148,7 @@ for i in range(5):
     plt.colorbar()
 
 plt.tight_layout()
+plt.show()
 
 #  LRP-alpha2-beta1
 plt.figure(figsize=(15,15))
@@ -165,3 +166,4 @@ for i in range(5):
     plt.colorbar()
 
 plt.tight_layout()
+plt.show()

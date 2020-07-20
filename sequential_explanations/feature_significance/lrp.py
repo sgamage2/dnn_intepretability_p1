@@ -54,12 +54,14 @@ class LRP4LSTM(object):
         - Rin:            relevance at layer input, of shape (D,)
         """
         sign_out = np.where(hout[na,:]>=0, 1., -1.) # shape (1, M)
-
+        # numerator
         numer    = (w * hin[:,na]) + ( bias_factor * (b[na,:]*1. + eps*sign_out*1.) / bias_nb_units ) # shape (D, M)
         # Note: here we multiply the bias_factor with both the bias b and the stabilizer eps since in fact
         # using the term (b[na,:]*1. + eps*sign_out*1.) / bias_nb_units in the numerator is only useful for sanity check
         # (in the initial paper version we were using (bias_factor*b[na,:]*1. + eps*sign_out*1.) / bias_nb_units instead)
-
+        
+        
+        # denominator
         denom    = hout[na,:] + (eps*sign_out*1.)   # shape (1, M)
 
         message  = (numer/denom) * Rout[na,:]       # shape (D, M)

@@ -123,9 +123,9 @@ e = shap.DeepExplainer(model.lstm, X_train)
 # e = shap.DeepExplainer((model.lstm.layers[0].input, model.lstm.layers[-1].output),X_train)
 
 
-
+# shap_val = e.shap_values(X_test)
 """
-shap_val = e.shap_values(X_test)
+
 shap_val = np.array(shap_val)
 
 shap_val = np.reshape(shap_val,(int(shap_val.shape[1]),int(shap_val.shape[2]),int(shap_val.shape[3])))
